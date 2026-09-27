@@ -19,7 +19,7 @@ export default defineTool({
     await salvar(ctx, o.id, {
       itens: [...o.itens, { id: crypto.randomUUID(), descricao, tipo, valor }],
       historico: [...o.historico, { data: agora, texto: `${tipo} adicionada: ${descricao}` }],
-    });
+    }, o.revisao);
     return { content: txt({ numero: o.numero, adicionado: { descricao, tipo, valor } }) };
   },
 });
