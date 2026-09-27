@@ -75,7 +75,12 @@ function Nova() {
       <form onSubmit={salvar} className="mx-auto max-w-2xl space-y-4">
         <div>
           <label className={rotulo}>Nome do cliente *</label>
-          <input className={campo} value={f.cliente} onChange={set("cliente")} placeholder="Ex.: João Pereira" />
+          <input
+            className={campo}
+            value={f.cliente}
+            onChange={set("cliente")}
+            placeholder="Ex.: João Pereira"
+          />
         </div>
         <div>
           <label className={rotulo}>Tipo de máquina *</label>
@@ -103,7 +108,12 @@ function Nova() {
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className={rotulo}>Telefone</label>
-            <input className={campo} inputMode="tel" value={f.telefone} onChange={set("telefone")} />
+            <input
+              className={campo}
+              inputMode="tel"
+              value={f.telefone}
+              onChange={set("telefone")}
+            />
           </div>
           <div>
             <label className={rotulo}>Prazo de conclusão</label>
@@ -111,11 +121,21 @@ function Nova() {
           </div>
           <div>
             <label className={rotulo}>Marca</label>
-            <input className={campo} value={f.marca} onChange={set("marca")} placeholder="Texto livre" />
+            <input
+              className={campo}
+              value={f.marca}
+              onChange={set("marca")}
+              placeholder="Texto livre"
+            />
           </div>
           <div>
             <label className={rotulo}>Modelo</label>
-            <input className={campo} value={f.modelo} onChange={set("modelo")} placeholder="Texto livre" />
+            <input
+              className={campo}
+              value={f.modelo}
+              onChange={set("modelo")}
+              placeholder="Texto livre"
+            />
           </div>
           <div className="sm:col-span-2">
             <label className={rotulo}>Número de série</label>
@@ -123,7 +143,12 @@ function Nova() {
           </div>
           <div className="sm:col-span-2">
             <label className={rotulo}>Observações</label>
-            <textarea className={campo} rows={2} value={f.observacoes} onChange={set("observacoes")} />
+            <textarea
+              className={campo}
+              rows={2}
+              value={f.observacoes}
+              onChange={set("observacoes")}
+            />
           </div>
         </div>
 

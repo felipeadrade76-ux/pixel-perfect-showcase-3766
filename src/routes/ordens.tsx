@@ -92,7 +92,9 @@ function Ordens() {
                   Previsão {dataCurta(o.prazo)}
                 </span>
               ) : null}
-              {saldo(o) > 0 ? <span className="text-destructive">Saldo {moeda(saldo(o))}</span> : null}
+              {saldo(o) > 0 ? (
+                <span className="text-destructive">Saldo {moeda(saldo(o))}</span>
+              ) : null}
             </div>
           </Link>
         ))}

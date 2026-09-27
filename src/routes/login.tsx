@@ -91,7 +91,11 @@ function Login() {
             onChange={(e) => setSenha(e.target.value)}
             className="h-12 rounded-lg border border-input bg-background px-3 text-base"
           />
-          {msg && <p role="alert" className="text-sm text-muted-foreground">{msg}</p>}
+          {msg && (
+            <p role="alert" className="text-sm text-muted-foreground">
+              {msg}
+            </p>
+          )}
           <button
             disabled={busy}
             className="h-12 rounded-lg bg-accent font-bold text-accent-foreground disabled:opacity-60"

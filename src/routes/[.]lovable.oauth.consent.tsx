@@ -49,7 +49,9 @@ export const Route = createFileRoute("/.lovable/oauth/consent")({
   }),
   component: Consent,
   errorComponent: ({ error }) => (
-    <main className="p-6">Não foi possível carregar este pedido: {String(error?.message ?? error)}</main>
+    <main className="p-6">
+      Não foi possível carregar este pedido: {String(error?.message ?? error)}
+    </main>
   ),
 });
 
@@ -88,7 +90,11 @@ function Consent() {
         <p className="mt-2 text-sm text-muted-foreground">
           Seu e-mail e perfil básico serão compartilhados. Isso não ignora as permissões do app.
         </p>
-        {error && <p role="alert" className="mt-3 text-sm text-destructive">{error}</p>}
+        {error && (
+          <p role="alert" className="mt-3 text-sm text-destructive">
+            {error}
+          </p>
+        )}
         <button
           disabled={busy}
           onClick={() => decide(true)}

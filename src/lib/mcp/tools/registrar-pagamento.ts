@@ -18,7 +18,10 @@ export default defineTool({
     const brl = valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
     await salvar(ctx, o.id, {
       pagamentos: [...o.pagamentos, { id: crypto.randomUUID(), valor, forma, data: agora }],
-      historico: [...o.historico, { data: agora, texto: `Pagamento de ${brl} recebido via ${forma}` }],
+      historico: [
+        ...o.historico,
+        { data: agora, texto: `Pagamento de ${brl} recebido via ${forma}` },
+      ],
     });
     return { content: txt({ numero: o.numero, pagamento: { valor, forma } }) };
   },
