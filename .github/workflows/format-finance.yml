@@ -1,7 +1,6 @@
 name: OficinIA - formatacao dos arquivos alterados
 on:
-  push:
-    branches: [feature/oficinia-v06-financeiro]
+  workflow_dispatch:
 jobs:
   format:
     if: github.actor != 'github-actions[bot]'
