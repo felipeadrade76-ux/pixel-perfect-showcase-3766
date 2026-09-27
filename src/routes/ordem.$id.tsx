@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowLeft, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
+import { CobrancaAssistida } from "@/components/CobrancaAssistida";
 import { StatusBadge } from "@/components/StatusBadge";
 import {
   STATUSES,
@@ -249,6 +250,8 @@ function Detalhe() {
             </div>
           </div>
         </section>
+
+        <CobrancaAssistida ordem={ordem} />
 
         <section className={bloco}>
           <h2 className="mb-3 font-bold">Pagamentos</h2>

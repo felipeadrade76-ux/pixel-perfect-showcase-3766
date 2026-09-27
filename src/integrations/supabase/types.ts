@@ -8,6 +8,42 @@ export type Database = {
   };
   public: {
     Tables: {
+      cobrancas: {
+        Row: {
+          id: string;
+          user_id: string;
+          ordem_id: string;
+          valor: number;
+          forma: string;
+          status: string;
+          criada_em: string;
+          informada_em: string | null;
+          confirmada_em: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string;
+          ordem_id: string;
+          valor: number;
+          forma: string;
+          status?: string;
+          criada_em?: string;
+          informada_em?: string | null;
+          confirmada_em?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          ordem_id?: string;
+          valor?: number;
+          forma?: string;
+          status?: string;
+          criada_em?: string;
+          informada_em?: string | null;
+          confirmada_em?: string | null;
+        };
+        Relationships: [];
+      };
       ordens: {
         Row: {
           cliente: string;
@@ -82,6 +118,18 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      oficinia_criar_cobranca: {
+        Args: { p_ordem: string; p_id: string; p_valor: number; p_forma: string };
+        Returns: Database["public"]["Tables"]["cobrancas"]["Row"];
+      };
+      oficinia_marcar_cobranca: {
+        Args: { p_cobranca: string; p_estado: string };
+        Returns: Database["public"]["Tables"]["cobrancas"]["Row"];
+      };
+      oficinia_confirmar_cobranca: {
+        Args: { p_cobranca: string };
+        Returns: Database["public"]["Tables"]["cobrancas"]["Row"];
+      };
       oficinia_registrar_pagamento: {
         Args: { p_ordem: string; p_pagamento_id: string; p_valor: number; p_forma: string };
         Returns: Database["public"]["Tables"]["ordens"]["Row"];
