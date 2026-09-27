@@ -102,7 +102,7 @@ SELECT public.oficinia_criar_cobranca(
 SELECT public.oficinia_registrar_pagamento(
  'eeeeeeee-0000-4000-8000-000000000010','eeeeeeee-0000-4000-8000-000000000011',50,'Cartão');
 SELECT public.oficinia_confirmar_cobranca('eeeeeeee-0000-4000-8000-000000000011');
-DO $
+DO $$
 DECLARE n integer; v_status text;
 BEGIN
  SELECT jsonb_array_length(pagamentos) INTO n FROM public.ordens
@@ -112,7 +112,7 @@ BEGIN
  IF n <> 1 OR v_status <> 'confirmado' THEN
   RAISE EXCEPTION 'Payment RPC left a ghost pending reservation';
  END IF;
-END $;
+END $$;
 
 RESET ROLE;
 SELECT 'AUDIT_PHASES_1_3_REGRESSIONS_PASSED' AS result;
