@@ -6,6 +6,9 @@ let deferRange = false;
 let finishRange: ((response: { data: Record<string, unknown>[]; error: null }) => void) | null =
   null;
 let rpcShouldFail = false;
+let deferInsert = false;
+let finishInsert: ((response: { data: Record<string, unknown>; error: null }) => void) | null = null;
+let errorFromPage = -1;
 const rpcIds: string[] = [];
 const row = (i: number) => ({
   id: `aaaaaaaa-aaaa-4aaa-8aaa-${String(i).padStart(12, "0")}`,
@@ -33,6 +36,16 @@ const fakeSupabase = {
   from(table: string) {
     if (table !== "ordens") throw new Error("Unexpected table: " + table);
     return {
+      insert(_item: Record<string, unknown>) {
+        return this;
+      },
+      single() {
+        if (!deferInsert) return Promise.resolve({ data: row(1), error: null });
+        deferInsert = false;
+        return new Promise<{ data: Record<string, unknown>; error: null }>((resolve) => {
+          finishInsert = resolve;
+        });
+      },
       select() {
         return this;
       },
@@ -40,6 +53,7 @@ const fakeSupabase = {
         return this;
       },
       range(start: number, end: number) {
+        if (start === errorFromPage) return Promise.resolve({ data: null, error: { message: "Falha de rede" } });
         if (deferRange) {
           deferRange = false;
           return new Promise<{ data: Record<string, unknown>[]; error: null }>((resolve) => {
@@ -69,6 +83,9 @@ beforeEach(() => {
   deferRange = false;
   finishRange = null;
   rpcShouldFail = false;
+  deferInsert = false;
+  finishInsert = null;
+  errorFromPage = -1;
   rpcIds.length = 0;
   store.limparOrdens();
   Object.assign(globalThis, { window: {} });
@@ -90,6 +107,31 @@ test("ignores an old account's database reply after logout", async () => {
   finishRange({ data: [row(1)], error: null });
   await loading;
   expect(store.useOrdens()).toHaveLength(0);
+});
+
+test("does not expose a newly created order after switching accounts mid-request", async () => {
+  store.selecionarUsuario("user-a");
+  deferInsert = true;
+  const creating = store.criarOrdem({
+    cliente: "Auditoria",
+    tipoMaquina: "Gerador",
+    problema: "Não funciona",
+  });
+  store.selecionarUsuario("user-b");
+  if (!finishInsert) throw new Error("Expected delayed order creation");
+  finishInsert({ data: row(1), error: null });
+  await expect(creating).rejects.toThrow("sessão mudou");
+  expect(store.useOrdens()).toHaveLength(0);
+});
+
+test("does not display a partial list when later pagination fails", async () => {
+  store.selecionarUsuario("user-a");
+  rows = [row(1)];
+  await store.loadOrdens();
+  rows = Array.from({ length: 701 }, (_, i) => row(i + 1));
+  errorFromPage = 500;
+  await expect(store.loadOrdens()).rejects.toThrow("Falha ao carregar");
+  expect(store.useOrdens()).toHaveLength(1);
 });
 
 test("retries uncertain payment with same ID and clears it on account switch", async () => {
