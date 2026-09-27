@@ -3,7 +3,7 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [feature/oficinia-v06-financeiro]
+    branches: [feature/oficinia-v06-financeiro, feature/oficinia-v07-integridade]
 jobs:
   build:
     runs-on: ubuntu-latest
