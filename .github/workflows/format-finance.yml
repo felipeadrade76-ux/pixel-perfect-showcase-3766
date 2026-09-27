@@ -1,0 +1,28 @@
+name: OficinIA - formatacao dos arquivos alterados
+on:
+  push:
+    branches: [feature/oficinia-v06-financeiro]
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/oficinia-v06-financeiro
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - name: Formatar somente os tres arquivos alterados
+        run: |
+          bunx prettier --write src/routes/financeiro.tsx 'src/routes/ordem.$id.tsx' src/lib/oficina-store.ts
+      - name: Registrar formatacao sem reescrever historico
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/routes/financeiro.tsx 'src/routes/ordem.$id.tsx' src/lib/oficina-store.ts
+          if ! git diff --cached --quiet; then
+            git commit -m "style: format finance-related files"
+            git push origin HEAD:feature/oficinia-v06-financeiro
+          fi
