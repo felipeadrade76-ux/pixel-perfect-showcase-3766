@@ -33,6 +33,18 @@ BEGIN
  IF NOT blocked THEN RAISE EXCEPTION 'Overpayment was accepted'; END IF;
 END $$;
 
+-- Reusing the same receipt ID with different payment details is not a valid retry.
+DO $
+DECLARE blocked boolean := false;
+BEGIN
+ BEGIN
+  PERFORM public.oficinia_registrar_pagamento(
+   '11111111-1111-4111-8111-111111111111','44444444-4444-4444-8444-444444444444',40,'Pix');
+ EXCEPTION WHEN raise_exception THEN blocked := true;
+ END;
+ IF NOT blocked THEN RAISE EXCEPTION 'Conflicting idempotency request accepted'; END IF;
+END $;
+
 -- Direct manipulation of payment JSON must be denied to regular authenticated clients.
 DO $$
 DECLARE blocked boolean := false;
