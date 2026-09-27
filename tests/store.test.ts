@@ -7,7 +7,8 @@ let finishRange: ((response: { data: Record<string, unknown>[]; error: null }) =
   null;
 let rpcShouldFail = false;
 let deferInsert = false;
-let finishInsert: ((response: { data: Record<string, unknown>; error: null }) => void) | null = null;
+let finishInsert: ((response: { data: Record<string, unknown>; error: null }) => void) | null =
+  null;
 let errorFromPage = -1;
 const rpcIds: string[] = [];
 const row = (i: number) => ({
@@ -53,7 +54,8 @@ const fakeSupabase = {
         return this;
       },
       range(start: number, end: number) {
-        if (start === errorFromPage) return Promise.resolve({ data: null, error: { message: "Falha de rede" } });
+        if (start === errorFromPage)
+          return Promise.resolve({ data: null, error: { message: "Falha de rede" } });
         if (deferRange) {
           deferRange = false;
           return new Promise<{ data: Record<string, unknown>[]; error: null }>((resolve) => {
