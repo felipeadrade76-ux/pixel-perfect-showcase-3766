@@ -62,8 +62,16 @@ test("an authenticated user can create an OS and reopen it in a mobile viewport"
           body: JSON.stringify(saved),
         });
       } else if (route.request().method() === "PATCH") {
-        saved = { ...saved, ...JSON.parse(route.request().postData() ?? "{}"), revisao: Number(saved?.revisao ?? 0) + 1 };
-        await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(saved) });
+        saved = {
+          ...saved,
+          ...JSON.parse(route.request().postData() ?? "{}"),
+          revisao: Number(saved?.revisao ?? 0) + 1,
+        };
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(saved),
+        });
       } else {
         const single = (route.request().headers()["accept"] ?? "").includes("vnd.pgrst.object");
         await route.fulfill({
@@ -81,21 +89,43 @@ test("an authenticated user can create an OS and reopen it in a mobile viewport"
     } else if (url.pathname === "/rest/v1/rpc/oficinia_criar_cobranca") {
       const input = JSON.parse(route.request().postData() ?? "{}");
       charge = {
-        id: input.p_id, user_id: userId, ordem_id: input.p_ordem,
-        valor: input.p_valor, forma: input.p_forma, status: "aguardando",
-        criada_em: "2026-09-27T12:10:00.000Z", informada_em: null, confirmada_em: null,
+        id: input.p_id,
+        user_id: userId,
+        ordem_id: input.p_ordem,
+        valor: input.p_valor,
+        forma: input.p_forma,
+        status: "aguardando",
+        criada_em: "2026-09-27T12:10:00.000Z",
+        informada_em: null,
+        confirmada_em: null,
       };
-      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(charge) });
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(charge),
+      });
     } else if (url.pathname === "/rest/v1/rpc/oficinia_marcar_cobranca") {
       charge = { ...charge, status: "informado", informada_em: "2026-09-27T12:11:00.000Z" };
-      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(charge) });
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(charge),
+      });
     } else if (url.pathname === "/rest/v1/rpc/oficinia_confirmar_cobranca") {
       charge = { ...charge, status: "confirmado", confirmada_em: "2026-09-27T12:12:00.000Z" };
-      saved = { ...saved, revisao: Number(saved?.revisao ?? 0) + 1, pagamentos: [
-        ...((saved?.pagamentos as unknown[]) ?? []),
-        { id: charge.id, valor: charge.valor, forma: charge.forma, data: charge.confirmada_em },
-      ] };
-      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(charge) });
+      saved = {
+        ...saved,
+        revisao: Number(saved?.revisao ?? 0) + 1,
+        pagamentos: [
+          ...((saved?.pagamentos as unknown[]) ?? []),
+          { id: charge.id, valor: charge.valor, forma: charge.forma, data: charge.confirmada_em },
+        ],
+      };
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(charge),
+      });
     } else if (url.pathname === "/auth/v1/user") {
       await route.fulfill({
         status: 200,
@@ -124,13 +154,17 @@ test("an authenticated user can create an OS and reopen it in a mobile viewport"
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
 
   // Real browser interaction; Supabase responses are controlled by this test.
-  const itens = page.locator("section").filter({ has: page.getByRole("heading", { name: "Peças e mão de obra" }) });
+  const itens = page
+    .locator("section")
+    .filter({ has: page.getByRole("heading", { name: "Peças e mão de obra" }) });
   await itens.locator('input[placeholder="Descrição"]').fill("Reparo");
   await itens.locator('input[placeholder="Valor R$"]').fill("100");
   await itens.getByRole("button", { name: "Adicionar item" }).click();
   await expect(itens).toContainText("R$ 100,00");
 
-  const cobrancas = page.locator("section").filter({ has: page.getByRole("heading", { name: "Cobranças assistidas" }) });
+  const cobrancas = page
+    .locator("section")
+    .filter({ has: page.getByRole("heading", { name: "Cobranças assistidas" }) });
   await cobrancas.getByRole("textbox", { name: "Valor da cobrança" }).fill("60");
   await cobrancas.getByRole("button", { name: "Preparar cobrança" }).click();
   await expect(cobrancas.getByRole("button", { name: "Cliente avisou que pagou" })).toBeVisible();
