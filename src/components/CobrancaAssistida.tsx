@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { loadOrdens, moeda, saldo, type Ordem } from "@/lib/oficina-store";
 import type { Database } from "@/integrations/supabase/types";
@@ -15,6 +15,7 @@ export function CobrancaAssistida({ ordem }: { ordem: Ordem }) {
   const [erro, setErro] = useState("");
   const [aviso, setAviso] = useState("");
   const [recarregar, setRecarregar] = useState(0);
+  const tentativa = useRef<{ id: string; valor: number; forma: Forma } | null>(null);
 
   useEffect(() => {
     let ativo = true;
@@ -65,13 +66,14 @@ export function CobrancaAssistida({ ordem }: { ordem: Ordem }) {
           "Informe um valor positivo, em centavos, até o saldo ainda não solicitado.",
         );
       }
-      const { error } = await supabase.from("cobrancas").insert({
-        id: crypto.randomUUID(),
-        ordem_id: ordem.id,
-        valor: v,
-        forma,
+      const id = tentativa.current?.valor === v && tentativa.current.forma === forma
+        ? tentativa.current.id : crypto.randomUUID();
+      tentativa.current = { id, valor: v, forma };
+      const { error } = await supabase.rpc("oficinia_criar_cobranca", {
+        p_ordem: ordem.id, p_id: id, p_valor: v, p_forma: forma,
       });
-      if (error) throw new Error("Cobrança não foi criada. Confira a conexão e tente novamente.");
+      if (error) throw new Error("Cobrança não confirmada. Confira a conexão e tente novamente com os mesmos dados.");
+      tentativa.current = null;
       setValor("");
       setAviso("Cobrança criada. Ela não representa dinheiro recebido.");
     });
