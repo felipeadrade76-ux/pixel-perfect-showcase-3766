@@ -8,7 +8,7 @@ SELECT setval('public.oficinia_os_seq', GREATEST(
 CREATE UNIQUE INDEX IF NOT EXISTS ordens_user_numero_unique ON public.ordens(user_id, numero);
 
 CREATE OR REPLACE FUNCTION public.oficinia_numero_os()
-RETURNS trigger LANGUAGE plpgsql SET search_path = '' AS $$
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $
 BEGIN
   NEW.numero := 'OS-' || lpad(nextval('public.oficinia_os_seq'::regclass)::text, 4, '0');
   RETURN NEW;
@@ -41,7 +41,7 @@ DECLARE
   v_id text := p_pagamento_id::text;
 BEGIN
   IF auth.uid() IS NULL THEN RAISE EXCEPTION 'Usuário não autenticado'; END IF;
-  IF p_pagamento_id IS NULL OR p_valor IS NULL OR p_valor <= 0 OR p_valor <> round(p_valor, 2)
+  IF p_forma IS NULL OR p_pagamento_id IS NULL OR p_valor IS NULL OR p_valor <= 0 OR p_valor <> round(p_valor, 2)
      OR p_forma NOT IN ('Pix','Dinheiro','Cartão') THEN
     RAISE EXCEPTION 'Dados de pagamento inválidos';
   END IF;
