@@ -9,10 +9,10 @@ export const Route = createFileRoute("/financeiro")({
   head: () => ({ meta: [{ title: "Financeiro — OficinIA" }] }),
   component: Financeiro,
 });
-const mesAtual = () =>
-  new Date().toLocaleDateString("en-CA", { year: "numeric", month: "2-digit" }).slice(0, 7);
-const mesDe = (iso: string) =>
-  new Date(iso).toLocaleDateString("en-CA", { year: "numeric", month: "2-digit" }).slice(0, 7);
+const mesDeData = (date: Date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+const mesAtual = () => mesDeData(new Date());
+const mesDe = (iso: string) => mesDeData(new Date(iso));
 const emOrcamento = (s: string) =>
   ["Recebida", "Em diagnóstico", "Aguardando aprovação"].includes(s);
 const box = "rounded-2xl border border-border bg-card p-4";
@@ -29,20 +29,27 @@ function Financeiro() {
   const [erroAvisos, setErroAvisos] = useState("");
   useEffect(() => {
     let ativo = true;
-    supabase
-      .from("cobrancas")
-      .select("*")
-      .in("status", ["aguardando", "informado"])
-      .order("criada_em", { ascending: false })
-      .then(({ data, error }) => {
-        if (!ativo) return;
-        if (error) setErroAvisos("Não foi possível carregar os avisos de cobrança.");
-        else setAvisos(data ?? []);
-      });
+    async function consultar() {
+      const { data, error } = await supabase
+        .from("cobrancas")
+        .select("*")
+        .in("status", ["aguardando", "informado"])
+        .order("criada_em", { ascending: false });
+      if (!ativo) return;
+      if (error) setErroAvisos("Não foi possível carregar os avisos de cobrança.");
+      else {
+        setErroAvisos("");
+        setAvisos(data ?? []);
+      }
+    }
+    void consultar();
+    const aoFocar = () => void consultar();
+    window.addEventListener("focus", aoFocar);
     return () => {
       ativo = false;
+      window.removeEventListener("focus", aoFocar);
     };
-  }, []);
+  }, [ordens]);
   const info = useMemo(() => {
     const pagamentos = ordens.flatMap((o) =>
       o.pagamentos.filter((p) => mesDe(p.data) === mes).map((p) => ({ ...p, ordem: o })),
