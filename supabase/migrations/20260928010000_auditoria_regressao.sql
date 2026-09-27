@@ -12,6 +12,7 @@ DECLARE
   v_pago numeric;
   v_reservado numeric;
   v_id text := p_pagamento_id::text;
+  v_cobranca public.cobrancas%ROWTYPE;
 BEGIN
   IF auth.uid() IS NULL THEN RAISE EXCEPTION 'Usuário não autenticado'; END IF;
   IF p_forma IS NULL OR p_pagamento_id IS NULL OR p_valor IS NULL OR p_valor <= 0
@@ -30,6 +31,15 @@ BEGIN
       WHERE p->>'id' = v_id AND (p->>'valor')::numeric = p_valor AND p->>'forma' = p_forma
     ) THEN RAISE EXCEPTION 'Identificador já utilizado para outro pagamento'; END IF;
     RETURN v_ordem;
+  END IF;
+
+  SELECT * INTO v_cobranca FROM public.cobrancas
+  WHERE id = p_pagamento_id AND user_id = auth.uid();
+  IF FOUND AND (
+    v_cobranca.ordem_id <> p_ordem OR v_cobranca.valor <> p_valor
+    OR v_cobranca.forma <> p_forma OR v_cobranca.status = 'cancelado'
+  ) THEN
+    RAISE EXCEPTION 'Identificador de cobrança incompatível com pagamento';
   END IF;
 
   -- A payment with the matching charge UUID converts that reservation into a
