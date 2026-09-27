@@ -313,7 +313,7 @@ export async function registrarPagamento(
   valor: number,
   forma: Pagamento["forma"],
 ): Promise<void> {
-  if (!Number.isFinite(valor) || valor <= 0 || Math.round(valor * 100) !== valor * 100 ||
+  if (!Number.isFinite(valor) || valor <= 0 || Math.abs(valor * 100 - Math.round(valor * 100)) > 1e-7 ||
       !["Pix", "Dinheiro", "Cartão"].includes(forma)) {
     throw new Error("Informe um valor positivo com até duas casas decimais e uma forma válida.");
   }
