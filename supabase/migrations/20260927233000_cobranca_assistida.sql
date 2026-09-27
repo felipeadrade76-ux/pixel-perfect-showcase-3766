@@ -20,7 +20,8 @@ ALTER TABLE public.cobrancas ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Dono consulta suas cobrancas" ON public.cobrancas FOR SELECT TO authenticated
   USING (user_id = auth.uid());
 CREATE POLICY "Dono cria cobrancas para suas ordens" ON public.cobrancas FOR INSERT TO authenticated
-  WITH CHECK (user_id = auth.uid() AND EXISTS (
+  WITH CHECK (user_id = auth.uid() AND status = 'aguardando'
+    AND informada_em IS NULL AND confirmada_em IS NULL AND EXISTS (
     SELECT 1 FROM public.ordens o WHERE o.id = ordem_id AND o.user_id = auth.uid()
   ));
 GRANT SELECT, INSERT ON public.cobrancas TO authenticated;
