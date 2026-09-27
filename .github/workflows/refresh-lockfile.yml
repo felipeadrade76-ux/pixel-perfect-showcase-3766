@@ -1,7 +1,6 @@
 name: OficinIA - atualizar lockfile (temporario)
 on:
-  push:
-    branches: [feature/oficinia-v09-independente]
+  workflow_dispatch:
 jobs:
   lockfile:
     if: github.actor != 'github-actions[bot]'
