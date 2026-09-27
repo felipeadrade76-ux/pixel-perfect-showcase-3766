@@ -3,7 +3,7 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [feature/oficinia-v06-financeiro, feature/oficinia-v07-integridade]
+    branches: [feature/oficinia-v06-financeiro, feature/oficinia-v07-integridade, feature/oficinia-v08-cobranca-assistida]
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -57,7 +57,10 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20260927193602_fd1d9671-18d6-440f-a56d-3b5e9af0b8db.sql
           psql -X -v ON_ERROR_STOP=1 -f supabase/tests/legacy.sql
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20260927230000_oficinia_integridade.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20260927233000_cobranca_assistida.sql
       - name: Verify numbering, permissions, RLS and payment rules
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/tests/phase2.sql
+      - name: Verify assisted charges and explicit confirmation
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/tests/assisted-charges.sql
       - name: Verify two concurrent payments
         run: bash supabase/tests/concurrency.sh
