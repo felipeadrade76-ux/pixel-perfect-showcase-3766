@@ -8,7 +8,7 @@ SELECT setval('public.oficinia_os_seq', GREATEST(
 CREATE UNIQUE INDEX IF NOT EXISTS ordens_user_numero_unique ON public.ordens(user_id, numero);
 
 CREATE OR REPLACE FUNCTION public.oficinia_numero_os()
-RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 BEGIN
   NEW.numero := 'OS-' || lpad(nextval('public.oficinia_os_seq'::regclass)::text, 4, '0');
   NEW.pagamentos := '[]'::jsonb;
@@ -33,7 +33,7 @@ FOR EACH ROW EXECUTE FUNCTION public.oficinia_incrementar_revisao();
 CREATE OR REPLACE FUNCTION public.oficinia_registrar_pagamento(
   p_ordem uuid, p_pagamento_id uuid, p_valor numeric, p_forma text
 ) RETURNS public.ordens
-LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 DECLARE
   v_ordem public.ordens%ROWTYPE;
   v_total numeric;
