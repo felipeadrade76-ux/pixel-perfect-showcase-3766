@@ -118,6 +118,10 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      oficinia_criar_cobranca: {
+        Args: { p_ordem: string; p_id: string; p_valor: number; p_forma: string };
+        Returns: Database["public"]["Tables"]["cobrancas"]["Row"];
+      };
       oficinia_marcar_cobranca: {
         Args: { p_cobranca: string; p_estado: string };
         Returns: Database["public"]["Tables"]["cobrancas"]["Row"];
