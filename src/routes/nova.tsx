@@ -26,6 +26,7 @@ function Nova() {
   const navigate = useNavigate();
   const [erro, setErro] = useState("");
   const [salvando, setSalvando] = useState(false);
+  const [requisicaoId] = useState(() => crypto.randomUUID());
   const [f, setF] = useState({
     cliente: "",
     tipoMaquina: "",
@@ -61,7 +62,7 @@ function Nova() {
         serie: f.serie.trim() || undefined,
         observacoes: f.observacoes.trim() || undefined,
         prazo: f.prazo ? new Date(f.prazo + "T12:00:00").toISOString() : undefined,
-      });
+      }, requisicaoId);
       navigate({ to: "/ordem/$id", params: { id: nova.id } });
     } catch (error) {
       setErro(error instanceof Error ? error.message : "Falha ao salvar a ordem.");
