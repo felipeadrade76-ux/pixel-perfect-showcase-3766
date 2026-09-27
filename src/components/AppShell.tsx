@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Home, ClipboardList, CalendarDays, Wallet, Plus, Wrench, LogOut } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
-import { loadOrdens, limparOrdens } from "@/lib/oficina-store";
+import { loadOrdens, limparOrdens, selecionarUsuario } from "@/lib/oficina-store";
 import { supabase } from "@/integrations/supabase/client";
 
 const nav = [
@@ -27,21 +27,47 @@ export function AppShell({
   children: ReactNode;
 }) {
   const [pronto, setPronto] = useState(false);
+  const [erroCarga, setErroCarga] = useState("");
+  const [carregando, setCarregando] = useState(false);
+  const [tentativa, setTentativa] = useState(0);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) return irParaLogin();
-      setPronto(true);
-      loadOrdens();
-    });
-    const { data } = supabase.auth.onAuthStateChange((e) => {
+    let ativo = true;
+    async function carregar() {
+      setCarregando(true);
+      setErroCarga("");
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error || !data.session) {
+          if (ativo) irParaLogin();
+          return;
+        }
+        if (!ativo) return;
+        selecionarUsuario(data.session.user.id);
+        setPronto(true);
+        await loadOrdens();
+      } catch (error) {
+        if (ativo)
+          setErroCarga(error instanceof Error ? error.message : "Falha ao carregar ordens.");
+      } finally {
+        if (ativo) setCarregando(false);
+      }
+    }
+    void carregar();
+    const { data } = supabase.auth.onAuthStateChange((e, session) => {
       if (e === "SIGNED_OUT") {
         limparOrdens();
         irParaLogin();
+      } else if (e === "SIGNED_IN" && session && selecionarUsuario(session.user.id)) {
+        setPronto(false);
+        setTentativa((n) => n + 1);
       }
     });
-    return () => data.subscription.unsubscribe();
-  }, []);
+    return () => {
+      ativo = false;
+      data.subscription.unsubscribe();
+    };
+  }, [tentativa]);
 
   const sair = () => supabase.auth.signOut();
 
@@ -92,7 +118,28 @@ export function AppShell({
             <LogOut className="h-5 w-5" />
           </button>
         </header>
-        <main className="flex-1 p-4 pb-28 md:pb-8">{pronto ? children : null}</main>
+        <main className="flex-1 p-4 pb-28 md:pb-8">
+          {erroCarga ? (
+            <div
+              role="alert"
+              className="mb-4 rounded-xl border border-destructive p-4 text-sm text-destructive"
+            >
+              <p>{erroCarga}</p>
+              <button
+                className="mt-3 rounded-lg border border-input px-4 py-2 font-semibold"
+                onClick={() => setTentativa((n) => n + 1)}
+              >
+                Tentar novamente
+              </button>
+            </div>
+          ) : null}
+          {carregando ? (
+            <p role="status" className="text-sm text-muted-foreground">
+              Carregando ordens...
+            </p>
+          ) : null}
+          {pronto && !erroCarga && !carregando ? children : null}
+        </main>
       </div>
 
       <nav className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-4 border-t border-border bg-card md:hidden">

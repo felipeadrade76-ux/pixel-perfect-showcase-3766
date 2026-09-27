@@ -16,10 +16,15 @@ export default defineTool({
   handler: async ({ ordem, descricao, tipo, valor }, ctx) => {
     const o = await buscar(ctx, ordem);
     const agora = new Date().toISOString();
-    await salvar(ctx, o.id, {
-      itens: [...o.itens, { id: crypto.randomUUID(), descricao, tipo, valor }],
-      historico: [...o.historico, { data: agora, texto: `${tipo} adicionada: ${descricao}` }],
-    });
+    await salvar(
+      ctx,
+      o.id,
+      {
+        itens: [...o.itens, { id: crypto.randomUUID(), descricao, tipo, valor }],
+        historico: [...o.historico, { data: agora, texto: `${tipo} adicionada: ${descricao}` }],
+      },
+      o.revisao,
+    );
     return { content: txt({ numero: o.numero, adicionado: { descricao, tipo, valor } }) };
   },
 });

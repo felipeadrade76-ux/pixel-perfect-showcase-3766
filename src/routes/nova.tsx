@@ -25,6 +25,8 @@ const rotulo = "mb-1 block text-sm font-semibold text-foreground";
 function Nova() {
   const navigate = useNavigate();
   const [erro, setErro] = useState("");
+  const [salvando, setSalvando] = useState(false);
+  const [requisicaoId] = useState(() => crypto.randomUUID());
   const [f, setF] = useState({
     cliente: "",
     tipoMaquina: "",
@@ -40,24 +42,36 @@ function Nova() {
   const set = (k: keyof typeof f) => (e: { target: { value: string } }) =>
     setF((p) => ({ ...p, [k]: e.target.value }));
 
-  function salvar(e: React.FormEvent) {
+  async function salvar(e: React.FormEvent) {
     e.preventDefault();
     if (!f.cliente.trim() || !f.tipoMaquina.trim() || !f.problema.trim()) {
       setErro("Preencha cliente, tipo de máquina e problema relatado.");
       return;
     }
-    const nova = criarOrdem({
-      cliente: f.cliente.trim(),
-      tipoMaquina: f.tipoMaquina.trim(),
-      problema: f.problema.trim(),
-      telefone: f.telefone.trim() || undefined,
-      marca: f.marca.trim() || undefined,
-      modelo: f.modelo.trim() || undefined,
-      serie: f.serie.trim() || undefined,
-      observacoes: f.observacoes.trim() || undefined,
-      prazo: f.prazo ? new Date(f.prazo + "T12:00:00").toISOString() : undefined,
-    });
-    navigate({ to: "/ordem/$id", params: { id: nova.id } });
+    if (salvando) return;
+    setSalvando(true);
+    setErro("");
+    try {
+      const nova = await criarOrdem(
+        {
+          cliente: f.cliente.trim(),
+          tipoMaquina: f.tipoMaquina.trim(),
+          problema: f.problema.trim(),
+          telefone: f.telefone.trim() || undefined,
+          marca: f.marca.trim() || undefined,
+          modelo: f.modelo.trim() || undefined,
+          serie: f.serie.trim() || undefined,
+          observacoes: f.observacoes.trim() || undefined,
+          prazo: f.prazo ? new Date(f.prazo + "T12:00:00").toISOString() : undefined,
+        },
+        requisicaoId,
+      );
+      navigate({ to: "/ordem/$id", params: { id: nova.id } });
+    } catch (error) {
+      setErro(error instanceof Error ? error.message : "Falha ao salvar a ordem.");
+    } finally {
+      setSalvando(false);
+    }
   }
 
   const tipos = [
@@ -156,9 +170,10 @@ function Nova() {
 
         <button
           type="submit"
+          disabled={salvando}
           className="w-full rounded-2xl bg-accent px-4 py-4 text-lg font-bold text-accent-foreground active:opacity-90"
         >
-          Salvar entrada
+          {salvando ? "Salvando..." : "Salvar entrada"}
         </button>
         <p className="pb-4 text-center text-xs text-muted-foreground">
           O número da ordem, a data e a hora são gerados automaticamente.

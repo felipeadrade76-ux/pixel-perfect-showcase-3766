@@ -18,12 +18,17 @@ export default defineTool({
       status === "Pronta"
         ? "Serviço concluído — máquina pronta para retirada"
         : `Status alterado para ${status}`;
-    await salvar(ctx, o.id, {
-      status,
-      historico: [...o.historico, { data: agora, texto }],
-      ...(status === "Pronta" ? { concluida_em: agora } : {}),
-      ...(status === "Entregue" ? { entregue_em: agora } : {}),
-    });
+    await salvar(
+      ctx,
+      o.id,
+      {
+        status,
+        historico: [...o.historico, { data: agora, texto }],
+        ...(status === "Pronta" ? { concluida_em: agora } : {}),
+        ...(status === "Entregue" ? { entregue_em: agora } : {}),
+      },
+      o.revisao,
+    );
     return { content: txt({ numero: o.numero, status }) };
   },
 });

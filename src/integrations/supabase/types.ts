@@ -20,6 +20,7 @@ export type Database = {
           marca: string | null;
           modelo: string | null;
           numero: string;
+          revisao: number;
           observacoes: string | null;
           pagamentos: Json;
           prazo: string | null;
@@ -40,7 +41,8 @@ export type Database = {
           itens?: Json;
           marca?: string | null;
           modelo?: string | null;
-          numero: string;
+          numero?: string;
+          revisao?: number;
           observacoes?: string | null;
           pagamentos?: Json;
           prazo?: string | null;
@@ -62,6 +64,7 @@ export type Database = {
           marca?: string | null;
           modelo?: string | null;
           numero?: string;
+          revisao?: number;
           observacoes?: string | null;
           pagamentos?: Json;
           prazo?: string | null;
@@ -79,7 +82,10 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      oficinia_registrar_pagamento: {
+        Args: { p_ordem: string; p_pagamento_id: string; p_valor: number; p_forma: string };
+        Returns: Database["public"]["Tables"]["ordens"]["Row"];
+      };
     };
     Enums: {
       [_ in never]: never;

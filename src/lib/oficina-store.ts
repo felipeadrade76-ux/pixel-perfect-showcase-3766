@@ -35,6 +35,7 @@ export type Evento = {
 export type Ordem = {
   id: string;
   numero: string;
+  revisao: number;
   cliente: string;
   telefone?: string | undefined;
   tipoMaquina: string;
@@ -58,6 +59,7 @@ const uid = () => crypto.randomUUID();
 type Row = {
   id: string;
   numero: string;
+  revisao: number;
   cliente: string;
   telefone: string | null;
   tipo_maquina: string;
@@ -82,6 +84,7 @@ function fromRow(r: Row): Ordem {
   return {
     id: r.id,
     numero: r.numero,
+    revisao: r.revisao,
     cliente: r.cliente,
     telefone: u(r.telefone),
     tipoMaquina: r.tipo_maquina,
@@ -125,33 +128,42 @@ function toRow(o: Ordem) {
 }
 
 let state: Ordem[] = [];
-let carregando = false;
+let carregamentoVersao = 0;
+let usuarioAtivo: string | null = null;
 const listeners = new Set<() => void>();
 
 function emit() {
   listeners.forEach((l) => l());
 }
 
-function erro(e: unknown) {
-  console.error("Falha ao salvar na nuvem", e);
-}
-
-export async function loadOrdens() {
-  if (typeof window === "undefined" || carregando) return;
-  carregando = true;
+export async function loadOrdens(): Promise<void> {
+  if (typeof window === "undefined") return;
+  const versao = ++carregamentoVersao;
+  const usuarioDaConsulta = usuarioAtivo;
   const { data, error } = await supabase
     .from("ordens")
     .select("*")
     .order("criada_em", { ascending: false });
-  carregando = false;
-  if (error) return erro(error);
+  if (versao !== carregamentoVersao || usuarioDaConsulta !== usuarioAtivo) return; // Ignore stale account responses.
+  if (error || !data)
+    throw new Error("Falha ao carregar ordens. Confira a internet e tente novamente.");
   state = (data as Row[]).map(fromRow);
   emit();
 }
 
 export function limparOrdens() {
+  ++carregamentoVersao;
+  usuarioAtivo = null;
   state = [];
   emit();
+}
+
+/** Clears previous-account data before another authenticated account can see the UI. */
+export function selecionarUsuario(id: string): boolean {
+  if (usuarioAtivo === id) return false;
+  limparOrdens();
+  usuarioAtivo = id;
+  return true;
 }
 
 function subscribe(cb: () => void) {
@@ -171,20 +183,51 @@ export function useOrdem(id: string) {
   return useOrdens().find((o) => o.id === id);
 }
 
-function salvar(o: Ordem) {
-  const { id, ...rest } = toRow(o);
-  supabase
-    .from("ordens")
-    .update(rest)
-    .eq("id", id)
-    .then(({ error }) => error && erro(error));
-}
+const alteracoesEmAndamento = new Set<string>();
 
-function update(id: string, fn: (o: Ordem) => Ordem) {
-  let changed: Ordem | undefined;
-  state = state.map((o) => (o.id === id ? (changed = fn(o)) : o));
-  emit();
-  if (changed) salvar(changed);
+async function update(id: string, fn: (o: Ordem) => Ordem): Promise<void> {
+  if (alteracoesEmAndamento.has(id)) {
+    throw new Error("Aguarde a alteração anterior terminar.");
+  }
+  alteracoesEmAndamento.add(id);
+  try {
+    const { data, error } = await supabase.from("ordens").select("*").eq("id", id).single();
+    if (error || !data) throw new Error("Não foi possível consultar a ordem. Confira a conexão.");
+    const atual = fromRow(data as Row);
+    const alterada = fn(atual);
+    // Only mutable nonfinancial fields; never overwrite payments during a concurrent edit.
+    const { data: salva, error: erroSalvar } = await supabase
+      .from("ordens")
+      .update({
+        cliente: alterada.cliente,
+        telefone: alterada.telefone ?? null,
+        tipo_maquina: alterada.tipoMaquina,
+        marca: alterada.marca ?? null,
+        modelo: alterada.modelo ?? null,
+        serie: alterada.serie ?? null,
+        problema: alterada.problema,
+        observacoes: alterada.observacoes ?? null,
+        prazo: alterada.prazo ?? null,
+        status: alterada.status,
+        concluida_em: alterada.concluidaEm ?? null,
+        entregue_em: alterada.entregueEm ?? null,
+        historico: alterada.historico,
+        itens: alterada.itens,
+      })
+      .eq("id", id)
+      .eq("revisao", atual.revisao)
+      .select("*")
+      .maybeSingle();
+    if (erroSalvar || !salva) {
+      throw new Error(
+        "A ordem foi alterada em outro dispositivo ou a gravação falhou. Atualize a tela e confira os dados.",
+      );
+    }
+    state = state.map((o) => (o.id === id ? fromRow(salva as Row) : o));
+    emit();
+  } finally {
+    alteracoesEmAndamento.delete(id);
+  }
 }
 
 export function proximoNumero() {
@@ -192,7 +235,7 @@ export function proximoNumero() {
   return "OS-" + String(Math.max(0, ...nums) + 1).padStart(4, "0");
 }
 
-export function criarOrdem(
+export async function criarOrdem(
   dados: Pick<
     Ordem,
     | "cliente"
@@ -205,30 +248,42 @@ export function criarOrdem(
     | "observacoes"
     | "prazo"
   >,
-): Ordem {
+  requisicaoId: string = uid(),
+): Promise<Ordem> {
   const agora = new Date().toISOString();
   const nova: Ordem = {
     ...dados,
-    id: uid(),
-    numero: proximoNumero(),
+    id: requisicaoId,
+    numero: "",
+    revisao: 0,
     status: "Recebida",
     criadaEm: agora,
     historico: [{ data: agora, texto: "Ordem criada" }],
     itens: [],
     pagamentos: [],
   };
-  state = [nova, ...state];
+  const { numero: _numeroIgnorado, ...semNumero } = toRow(nova);
+  const { data, error } = await supabase.from("ordens").insert(semNumero).select("*").single();
+  let salva = data;
+  if (error && error.code === "23505") {
+    // Retry with the same ID after a lost response: find the previously saved OS.
+    const repetida = await supabase.from("ordens").select("*").eq("id", requisicaoId).maybeSingle();
+    if (!repetida.error && repetida.data) salva = repetida.data;
+  }
+  if (!salva) {
+    throw new Error(
+      "Não foi possível confirmar a criação. Confira a lista de OS antes de tentar novamente.",
+    );
+  }
+  const confirmada = fromRow(salva as Row);
+  state = [confirmada, ...state.filter((o) => o.id !== confirmada.id)];
   emit();
-  supabase
-    .from("ordens")
-    .insert(toRow(nova))
-    .then(({ error }) => error && erro(error));
-  return nova;
+  return confirmada;
 }
 
-export function alterarStatus(id: string, status: Status) {
+export async function alterarStatus(id: string, status: Status) {
   const agora = new Date().toISOString();
-  update(id, (o) => {
+  await update(id, (o) => {
     const hist = [...o.historico];
     if (status === "Pronta") {
       hist.push({ data: agora, texto: "Serviço concluído — máquina pronta para retirada" });
@@ -245,18 +300,18 @@ export function alterarStatus(id: string, status: Status) {
   });
 }
 
-export function editarOrdem(id: string, dados: Partial<Ordem>) {
+export async function editarOrdem(id: string, dados: Partial<Ordem>) {
   const agora = new Date().toISOString();
-  update(id, (o) => ({
+  await update(id, (o) => ({
     ...o,
     ...dados,
     historico: [...o.historico, { data: agora, texto: "Dados da ordem atualizados" }],
   }));
 }
 
-export function adicionarItem(id: string, item: Omit<Item, "id">) {
+export async function adicionarItem(id: string, item: Omit<Item, "id">) {
   const agora = new Date().toISOString();
-  update(id, (o) => ({
+  await update(id, (o) => ({
     ...o,
     itens: [...o.itens, { ...item, id: uid() }],
     historico: [
@@ -266,76 +321,74 @@ export function adicionarItem(id: string, item: Omit<Item, "id">) {
   }));
 }
 
-export function removerItem(id: string, itemId: string) {
-  update(id, (o) => ({ ...o, itens: o.itens.filter((i) => i.id !== itemId) }));
+export async function removerItem(id: string, itemId: string) {
+  await update(id, (o) => ({ ...o, itens: o.itens.filter((i) => i.id !== itemId) }));
 }
 
 const pagamentosEmAndamento = new Set<string>();
+const requisicoesPagamento = new Map<
+  string,
+  { id: string; valor: number; forma: Pagamento["forma"] }
+>();
 
-/** Confirma o lançamento no Supabase antes de exibir o pagamento como recebido.
- * Bloqueia cliques simultâneos neste navegador; integração bancária não está implementada.
- * Ainda requer uma operação transacional no banco para múltiplos dispositivos concorrentes.
- */
+/** The RPC locks the OS row, validates its balance in the database and deduplicates by request UUID. */
 export async function registrarPagamento(
   id: string,
   valor: number,
   forma: Pagamento["forma"],
 ): Promise<void> {
-  if (!Number.isFinite(valor) || valor <= 0 || !["Pix", "Dinheiro", "Cartão"].includes(forma)) {
-    throw new Error("Informe um valor positivo e uma forma de pagamento válida.");
+  if (
+    !Number.isFinite(valor) ||
+    valor <= 0 ||
+    Math.abs(valor * 100 - Math.round(valor * 100)) > 1e-7 ||
+    !["Pix", "Dinheiro", "Cartão"].includes(forma)
+  ) {
+    throw new Error("Informe um valor positivo com até duas casas decimais e uma forma válida.");
   }
-  if (pagamentosEmAndamento.has(id)) {
-    throw new Error("Aguarde o lançamento anterior terminar.");
+  if (pagamentosEmAndamento.has(id) || alteracoesEmAndamento.has(id)) {
+    throw new Error("Aguarde a operação anterior terminar.");
   }
+  const anterior = requisicoesPagamento.get(id);
+  const pagamentoId =
+    anterior && anterior.valor === valor && anterior.forma === forma ? anterior.id : uid();
+  requisicoesPagamento.set(id, { id: pagamentoId, valor, forma });
   pagamentosEmAndamento.add(id);
   try {
-    const { data, error } = await supabase.from("ordens").select("*").eq("id", id).single();
-    if (error || !data)
-      throw new Error("Não foi possível consultar o saldo atualizado. Tente novamente.");
-    const atual = fromRow(data as Row);
-    const pendente = saldo(atual);
-    const arredondado = Math.round(valor * 100) / 100;
-    if (arredondado <= 0 || arredondado > Math.round(pendente * 100) / 100) {
-      throw new Error("O valor informado ultrapassa o saldo disponível ou é inválido.");
-    }
-    const agora = new Date().toISOString();
-    const alterada: Ordem = {
-      ...atual,
-      pagamentos: [...atual.pagamentos, { id: uid(), valor: arredondado, forma, data: agora }],
-      historico: [
-        ...atual.historico,
-        {
-          data: agora,
-          texto: `Pagamento de ${moeda(arredondado)} registrado manualmente via ${forma}`,
-        },
-      ],
-    };
-    const { id: rowId, ...resto } = toRow(alterada);
-    const { data: salva, error: erroSalvar } = await supabase
-      .from("ordens")
-      .update(resto)
-      .eq("id", rowId)
-      .select("*")
-      .single();
-    if (erroSalvar || !salva)
+    const { data, error } = await supabase.rpc("oficinia_registrar_pagamento", {
+      p_ordem: id,
+      p_pagamento_id: pagamentoId,
+      p_valor: valor,
+      p_forma: forma,
+    });
+    if (error || !data) {
       throw new Error(
-        "O pagamento não foi confirmado no banco. Confira a conexão e tente novamente.",
+        "Não foi possível confirmar o lançamento. Confira a OS antes de tentar novamente.",
       );
-    state = state.map((o) => (o.id === id ? fromRow(salva as Row) : o));
+    }
+    const confirmada = fromRow(data as Row);
+    state = state.map((o) => (o.id === id ? confirmada : o));
     emit();
+    requisicoesPagamento.delete(id);
   } finally {
     pagamentosEmAndamento.delete(id);
   }
 }
 
-export function excluirOrdem(id: string) {
-  state = state.filter((o) => o.id !== id);
-  emit();
-  supabase
-    .from("ordens")
-    .delete()
-    .eq("id", id)
-    .then(({ error }) => error && erro(error));
+export async function excluirOrdem(id: string): Promise<void> {
+  if (alteracoesEmAndamento.has(id) || pagamentosEmAndamento.has(id)) {
+    throw new Error("Aguarde a operação anterior terminar.");
+  }
+  alteracoesEmAndamento.add(id);
+  try {
+    const { data, error } = await supabase.from("ordens").delete().eq("id", id).select("id");
+    if (error || !data || data.length !== 1) {
+      throw new Error("A exclusão não foi confirmada no banco. Tente novamente.");
+    }
+    state = state.filter((o) => o.id !== id);
+    emit();
+  } finally {
+    alteracoesEmAndamento.delete(id);
+  }
 }
 
 const dias = (n: number) => {
@@ -381,7 +434,10 @@ export function carregarExemplos() {
       prazo: dias(0),
     },
   ];
-  ex.forEach((d) => criarOrdem(d));
+  void Promise.allSettled(ex.map((d) => criarOrdem(d))).then((resultados) => {
+    const falhas = resultados.filter((r) => r.status === "rejected");
+    if (falhas.length) console.error("Falha ao criar ordens de exemplo", falhas);
+  });
 }
 
 export const total = (o: Ordem) => o.itens.reduce((s, i) => s + i.valor, 0);

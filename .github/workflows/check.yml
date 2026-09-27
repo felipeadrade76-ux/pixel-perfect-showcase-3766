@@ -3,7 +3,7 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [feature/oficinia-v06-financeiro]
+    branches: [feature/oficinia-v06-financeiro, feature/oficinia-v07-integridade]
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -15,8 +15,49 @@ jobs:
       - run: bun install --frozen-lockfile
       - name: Build
         run: bun run build
+      - name: TypeScript strict typecheck
+        run: bunx tsc --noEmit
       - name: ESLint completo dos arquivos alterados
         run: |
           bunx eslint src/routes/financeiro.tsx 'src/routes/ordem.$id.tsx' src/lib/oficina-store.ts
       - name: Lint completo - zero erros e avisos
         run: bunx eslint . --max-warnings 0
+
+  database:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: oficinia_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d oficinia_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: oficinia_test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
+      - name: Apply schema and migration in disposable database
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f supabase/tests/bootstrap.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20260927193602_fd1d9671-18d6-440f-a56d-3b5e9af0b8db.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/tests/legacy.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20260927230000_oficinia_integridade.sql
+      - name: Verify numbering, permissions, RLS and payment rules
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/tests/phase2.sql
+      - name: Verify two concurrent payments
+        run: bash supabase/tests/concurrency.sh
