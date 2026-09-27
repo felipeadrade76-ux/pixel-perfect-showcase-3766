@@ -11,6 +11,7 @@ CREATE OR REPLACE FUNCTION public.oficinia_numero_os()
 RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $
 BEGIN
   NEW.numero := 'OS-' || lpad(nextval('public.oficinia_os_seq'::regclass)::text, 4, '0');
+  NEW.pagamentos := '[]'::jsonb;
   RETURN NEW;
 END $$;
 DROP TRIGGER IF EXISTS oficinia_gerar_numero_os ON public.ordens;
@@ -32,7 +33,7 @@ FOR EACH ROW EXECUTE FUNCTION public.oficinia_incrementar_revisao();
 CREATE OR REPLACE FUNCTION public.oficinia_registrar_pagamento(
   p_ordem uuid, p_pagamento_id uuid, p_valor numeric, p_forma text
 ) RETURNS public.ordens
-LANGUAGE plpgsql SECURITY INVOKER SET search_path = '' AS $$
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $
 DECLARE
   v_ordem public.ordens%ROWTYPE;
   v_total numeric;
@@ -71,3 +72,41 @@ BEGIN
 END $$;
 REVOKE ALL ON FUNCTION public.oficinia_registrar_pagamento(uuid,uuid,numeric,text) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.oficinia_registrar_pagamento(uuid,uuid,numeric,text) TO authenticated;
+
+-- An authenticated client may edit only operational fields. Payment JSON can be
+-- changed exclusively by the owner-checked RPC above, not by a stale browser update.
+REVOKE UPDATE ON public.ordens FROM authenticated;
+GRANT UPDATE (
+  cliente, telefone, tipo_maquina, marca, modelo, serie, problema,
+  observacoes, prazo, status, concluida_em, entregue_em, historico, itens
+) ON public.ordens TO authenticated;
+
+-- Reject invalid money and reductions of order total below already received amounts.
+CREATE OR REPLACE FUNCTION public.oficinia_validar_saldo()
+RETURNS trigger LANGUAGE plpgsql SET search_path = '' AS $$
+DECLARE v_total numeric; v_pago numeric;
+BEGIN
+  IF jsonb_typeof(NEW.itens) <> 'array' OR jsonb_typeof(NEW.pagamentos) <> 'array' THEN
+    RAISE EXCEPTION 'Itens e pagamentos devem ser listas';
+  END IF;
+  IF EXISTS (
+    SELECT 1 FROM jsonb_array_elements(NEW.itens) i
+    WHERE jsonb_typeof(i->'valor') <> 'number'
+       OR (i->>'valor')::numeric < 0
+       OR (i->>'valor')::numeric <> round((i->>'valor')::numeric, 2)
+  ) OR EXISTS (
+    SELECT 1 FROM jsonb_array_elements(NEW.pagamentos) p
+    WHERE jsonb_typeof(p->'valor') <> 'number'
+       OR (p->>'valor')::numeric <= 0
+       OR (p->>'valor')::numeric <> round((p->>'valor')::numeric, 2)
+  ) THEN RAISE EXCEPTION 'Valores monetários inválidos'; END IF;
+  SELECT COALESCE(sum((i->>'valor')::numeric),0) INTO v_total
+  FROM jsonb_array_elements(NEW.itens) i;
+  SELECT COALESCE(sum((p->>'valor')::numeric),0) INTO v_pago
+  FROM jsonb_array_elements(NEW.pagamentos) p;
+  IF v_pago > v_total THEN RAISE EXCEPTION 'Total inferior aos pagamentos registrados'; END IF;
+  RETURN NEW;
+END $$;
+DROP TRIGGER IF EXISTS oficinia_validar_saldo ON public.ordens;
+CREATE TRIGGER oficinia_validar_saldo BEFORE INSERT OR UPDATE ON public.ordens
+FOR EACH ROW EXECUTE FUNCTION public.oficinia_validar_saldo();
