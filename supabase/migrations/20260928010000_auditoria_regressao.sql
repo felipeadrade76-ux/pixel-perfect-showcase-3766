@@ -37,7 +37,7 @@ BEGIN
   WHERE id = p_pagamento_id AND user_id = auth.uid();
   IF FOUND AND (
     v_cobranca.ordem_id <> p_ordem OR v_cobranca.valor <> p_valor
-    OR v_cobranca.forma <> p_forma OR v_cobranca.status = 'cancelado'
+    OR v_cobranca.forma <> p_forma OR v_cobranca.status IN ('cancelado','confirmado')
   ) THEN
     RAISE EXCEPTION 'Identificador de cobrança incompatível com pagamento';
   END IF;
@@ -68,6 +68,14 @@ BEGIN
     ))
   WHERE id = p_ordem AND user_id = auth.uid()
   RETURNING * INTO v_ordem;
+
+  -- A receipt which uses a pending charge's UUID must settle that charge in
+  -- this very transaction. Otherwise a direct receipt leaves a ghost "pending"
+  -- charge and its reservation incorrectly reduces the next available balance.
+  IF v_cobranca.id IS NOT NULL THEN
+    UPDATE public.cobrancas SET status='confirmado', confirmada_em=now()
+    WHERE id=v_cobranca.id AND user_id=auth.uid();
+  END IF;
   RETURN v_ordem;
 END $$;
 REVOKE ALL ON FUNCTION public.oficinia_registrar_pagamento(uuid,uuid,numeric,text) FROM PUBLIC, anon;
