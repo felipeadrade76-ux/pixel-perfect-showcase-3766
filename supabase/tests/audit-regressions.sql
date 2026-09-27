@@ -92,5 +92,27 @@ BEGIN
  END;
  IF NOT rejected THEN RAISE EXCEPTION 'Cancelled a confirmed receipt'; END IF;
 END $$;
+-- Even if an authorized operator uses the regular payment RPC with a charge's
+-- own id, the pending intent must not remain as a duplicate reservation.
+INSERT INTO public.ordens (id,cliente,tipo_maquina,problema,itens)
+VALUES ('eeeeeeee-0000-4000-8000-000000000010','Auditoria 2','Gerador','Teste',
+  '[{"id":"eeeeeeee-0000-4000-8000-000000000012","descricao":"Serviço","tipo":"Mão de obra","valor":50}]'::jsonb);
+SELECT public.oficinia_criar_cobranca(
+ 'eeeeeeee-0000-4000-8000-000000000010','eeeeeeee-0000-4000-8000-000000000011',50,'Cartão');
+SELECT public.oficinia_registrar_pagamento(
+ 'eeeeeeee-0000-4000-8000-000000000010','eeeeeeee-0000-4000-8000-000000000011',50,'Cartão');
+SELECT public.oficinia_confirmar_cobranca('eeeeeeee-0000-4000-8000-000000000011');
+DO $
+DECLARE n integer; v_status text;
+BEGIN
+ SELECT jsonb_array_length(pagamentos) INTO n FROM public.ordens
+ WHERE id='eeeeeeee-0000-4000-8000-000000000010';
+ SELECT status INTO v_status FROM public.cobrancas
+ WHERE id='eeeeeeee-0000-4000-8000-000000000011';
+ IF n <> 1 OR v_status <> 'confirmado' THEN
+  RAISE EXCEPTION 'Payment RPC left a ghost pending reservation';
+ END IF;
+END $;
+
 RESET ROLE;
 SELECT 'AUDIT_PHASES_1_3_REGRESSIONS_PASSED' AS result;
