@@ -1,28 +1,30 @@
-import { defineTool } from "@lovable.dev/mcp-js";
+import { defineTool, ToolError } from "@lovable.dev/mcp-js";
 import { z } from "zod";
-import { buscar, salvar, txt } from "../shared";
+import { buscar, db, txt } from "../shared";
 
 export default defineTool({
   name: "registrar_pagamento",
   title: "Registrar pagamento",
-  description: "Registra um pagamento recebido (Pix, Dinheiro ou Cartão) em uma ordem.",
+  description: "Registra um pagamento manual em uma ordem através de operação transacional.",
   inputSchema: {
-    ordem: z.string().min(1).describe("Número (ex.: OS-0003) ou id da ordem."),
-    valor: z.number().positive().describe("Valor em reais."),
+    ordem: z.string().min(1).describe("Número da ordem ou UUID."),
+    valor: z.number().positive().describe("Valor em reais, até duas casas decimais."),
     forma: z.enum(["Pix", "Dinheiro", "Cartão"]),
+    requisicaoId: z.string().uuid().describe("Identificador único do lançamento para repetição segura."),
   },
   annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
-  handler: async ({ ordem, valor, forma }, ctx) => {
+  handler: async ({ ordem, valor, forma, requisicaoId }, ctx) => {
     const o = await buscar(ctx, ordem);
-    const agora = new Date().toISOString();
-    const brl = valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-    await salvar(ctx, o.id, {
-      pagamentos: [...o.pagamentos, { id: crypto.randomUUID(), valor, forma, data: agora }],
-      historico: [
-        ...o.historico,
-        { data: agora, texto: `Pagamento de ${brl} recebido via ${forma}` },
-      ],
+    if (!Number.isFinite(valor) || Math.round(valor * 100) !== valor * 100) {
+      throw new ToolError("Valor inválido: use no máximo duas casas decimais.");
+    }
+    const { data, error } = await db(ctx).rpc("oficinia_registrar_pagamento", {
+      p_ordem: o.id,
+      p_pagamento_id: requisicaoId,
+      p_valor: valor,
+      p_forma: forma,
     });
-    return { content: txt({ numero: o.numero, pagamento: { valor, forma } }) };
+    if (error || !data) throw new ToolError(error?.message ?? "Pagamento não confirmado.");
+    return { content: txt({ numero: o.numero, pagamento: { id: requisicaoId, valor, forma } }) };
   },
 });
