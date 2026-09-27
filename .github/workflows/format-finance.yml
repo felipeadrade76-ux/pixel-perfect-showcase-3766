@@ -1,6 +1,7 @@
 name: OficinIA - formatacao dos arquivos alterados
 on:
-  workflow_dispatch:
+  push:
+    branches: [feature/oficinia-v07-integridade]
 jobs:
   format:
     if: github.actor != 'github-actions[bot]'
