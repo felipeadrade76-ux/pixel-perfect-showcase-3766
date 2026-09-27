@@ -27,6 +27,18 @@ jobs:
           bunx eslint src/routes/financeiro.tsx 'src/routes/ordem.$id.tsx' src/lib/oficina-store.ts
       - name: Lint completo - zero erros e avisos
         run: bunx eslint . --max-warnings 0
+      - name: Smoke test standalone Node server and SSR
+        env:
+          VITE_SUPABASE_URL: https://example.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
+          SUPABASE_URL: https://example.supabase.co
+          SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
+        run: bash scripts/smoke-runtime.sh
+      - name: Protect independent environment files
+        run: |
+          test -z "$(git ls-files .env)"
+          ! grep -R -E 'VITE_.*(SERVICE_ROLE|SECRET_KEY)' .env.example
+
 
   database:
     runs-on: ubuntu-latest
