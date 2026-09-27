@@ -16,7 +16,8 @@ jobs:
       - name: Build
         run: bun run build
       - name: ESLint das alteracoes (sem regra global de formatacao)
-        run: bunx eslint src/routes/financeiro.tsx 'src/routes/ordem.$id.tsx' src/lib/oficina-store.ts --rule 'prettier/prettier: off'
+        run: |
+          bunx eslint src/routes/financeiro.tsx 'src/routes/ordem.$id.tsx' src/lib/oficina-store.ts --rule 'prettier/prettier: off'
       - name: Lint completo - diagnostico de formatacao preexistente
         run: bun run lint
         continue-on-error: true
