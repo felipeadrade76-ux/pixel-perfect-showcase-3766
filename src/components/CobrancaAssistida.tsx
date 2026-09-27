@@ -66,13 +66,21 @@ export function CobrancaAssistida({ ordem }: { ordem: Ordem }) {
           "Informe um valor positivo, em centavos, até o saldo ainda não solicitado.",
         );
       }
-      const id = tentativa.current?.valor === v && tentativa.current.forma === forma
-        ? tentativa.current.id : crypto.randomUUID();
+      const id =
+        tentativa.current?.valor === v && tentativa.current.forma === forma
+          ? tentativa.current.id
+          : crypto.randomUUID();
       tentativa.current = { id, valor: v, forma };
       const { error } = await supabase.rpc("oficinia_criar_cobranca", {
-        p_ordem: ordem.id, p_id: id, p_valor: v, p_forma: forma,
+        p_ordem: ordem.id,
+        p_id: id,
+        p_valor: v,
+        p_forma: forma,
       });
-      if (error) throw new Error("Cobrança não confirmada. Confira a conexão e tente novamente com os mesmos dados.");
+      if (error)
+        throw new Error(
+          "Cobrança não confirmada. Confira a conexão e tente novamente com os mesmos dados.",
+        );
       tentativa.current = null;
       setValor("");
       setAviso("Cobrança criada. Ela não representa dinheiro recebido.");
