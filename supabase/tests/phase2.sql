@@ -35,7 +35,7 @@ BEGIN
 END $$;
 
 -- Reusing the same receipt ID with different payment details is not a valid retry.
-DO $
+DO $$
 DECLARE blocked boolean := false;
 BEGIN
  BEGIN
@@ -44,7 +44,7 @@ BEGIN
  EXCEPTION WHEN raise_exception THEN blocked := true;
  END;
  IF NOT blocked THEN RAISE EXCEPTION 'Conflicting idempotency request accepted'; END IF;
-END $;
+END $$;
 
 -- Direct manipulation of payment JSON must be denied to regular authenticated clients.
 DO $$
@@ -142,7 +142,7 @@ BEGIN
 END $$;
 
 -- Reusing the same receipt ID with different payment details is not a valid retry.
-DO $
+DO $$
 DECLARE blocked boolean := false;
 BEGIN
  BEGIN
@@ -151,7 +151,7 @@ BEGIN
  EXCEPTION WHEN raise_exception THEN blocked := true;
  END;
  IF NOT blocked THEN RAISE EXCEPTION 'Conflicting idempotency request accepted'; END IF;
-END $;
+END $$;
 
 -- Direct manipulation of payment JSON must be denied to regular authenticated clients.
 DO $$
