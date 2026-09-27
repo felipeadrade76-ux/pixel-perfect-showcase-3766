@@ -171,20 +171,29 @@ export function useOrdem(id: string) {
   return useOrdens().find((o) => o.id === id);
 }
 
-function salvar(o: Ordem) {
-  const { id, ...rest } = toRow(o);
-  supabase
-    .from("ordens")
-    .update(rest)
-    .eq("id", id)
-    .then(({ error }) => error && erro(error));
-}
+const alteracoesEmAndamento = new Set<string>();
 
-function update(id: string, fn: (o: Ordem) => Ordem) {
-  let changed: Ordem | undefined;
-  state = state.map((o) => (o.id === id ? (changed = fn(o)) : o));
-  emit();
-  if (changed) salvar(changed);
+async function update(id: string, fn: (o: Ordem) => Ordem): Promise<void> {
+  if (alteracoesEmAndamento.has(id)) {
+    throw new Error("Aguarde a alteração anterior terminar.");
+  }
+  alteracoesEmAndamento.add(id);
+  try {
+    const { data, error } = await supabase.from("ordens").select("*").eq("id", id).single();
+    if (error || !data) throw new Error("Não foi possível consultar a ordem. Confira a conexão.");
+    const atual = fromRow(data as Row);
+    const alterada = fn(atual);
+    const { id: rowId, ...resto } = toRow(alterada);
+    const { data: salva, error: erroSalvar } = await supabase
+      .from("ordens").update(resto).eq("id", rowId).select("*").single();
+    if (erroSalvar || !salva) {
+      throw new Error("A alteração não foi confirmada no banco. Tente novamente.");
+    }
+    state = state.map((o) => o.id === id ? fromRow(salva as Row) : o);
+    emit();
+  } finally {
+    alteracoesEmAndamento.delete(id);
+  }
 }
 
 export function proximoNumero() {
@@ -227,9 +236,9 @@ export async function criarOrdem(
   return confirmada;
 }
 
-export function alterarStatus(id: string, status: Status) {
+export async function alterarStatus(id: string, status: Status) {
   const agora = new Date().toISOString();
-  update(id, (o) => {
+  await update(id, (o) => {
     const hist = [...o.historico];
     if (status === "Pronta") {
       hist.push({ data: agora, texto: "Serviço concluído — máquina pronta para retirada" });
@@ -246,18 +255,18 @@ export function alterarStatus(id: string, status: Status) {
   });
 }
 
-export function editarOrdem(id: string, dados: Partial<Ordem>) {
+export async function editarOrdem(id: string, dados: Partial<Ordem>) {
   const agora = new Date().toISOString();
-  update(id, (o) => ({
+  await update(id, (o) => ({
     ...o,
     ...dados,
     historico: [...o.historico, { data: agora, texto: "Dados da ordem atualizados" }],
   }));
 }
 
-export function adicionarItem(id: string, item: Omit<Item, "id">) {
+export async function adicionarItem(id: string, item: Omit<Item, "id">) {
   const agora = new Date().toISOString();
-  update(id, (o) => ({
+  await update(id, (o) => ({
     ...o,
     itens: [...o.itens, { ...item, id: uid() }],
     historico: [
@@ -267,8 +276,8 @@ export function adicionarItem(id: string, item: Omit<Item, "id">) {
   }));
 }
 
-export function removerItem(id: string, itemId: string) {
-  update(id, (o) => ({ ...o, itens: o.itens.filter((i) => i.id !== itemId) }));
+export async function removerItem(id: string, itemId: string) {
+  await update(id, (o) => ({ ...o, itens: o.itens.filter((i) => i.id !== itemId) }));
 }
 
 const pagamentosEmAndamento = new Set<string>();
@@ -285,7 +294,7 @@ export async function registrarPagamento(
   if (!Number.isFinite(valor) || valor <= 0 || !["Pix", "Dinheiro", "Cartão"].includes(forma)) {
     throw new Error("Informe um valor positivo e uma forma de pagamento válida.");
   }
-  if (pagamentosEmAndamento.has(id)) {
+  if (pagamentosEmAndamento.has(id) || alteracoesEmAndamento.has(id)) {
     throw new Error("Aguarde o lançamento anterior terminar.");
   }
   pagamentosEmAndamento.add(id);
@@ -329,14 +338,21 @@ export async function registrarPagamento(
   }
 }
 
-export function excluirOrdem(id: string) {
-  state = state.filter((o) => o.id !== id);
-  emit();
-  supabase
-    .from("ordens")
-    .delete()
-    .eq("id", id)
-    .then(({ error }) => error && erro(error));
+export async function excluirOrdem(id: string): Promise<void> {
+  if (alteracoesEmAndamento.has(id) || pagamentosEmAndamento.has(id)) {
+    throw new Error("Aguarde a operação anterior terminar.");
+  }
+  alteracoesEmAndamento.add(id);
+  try {
+    const { data, error } = await supabase.from("ordens").delete().eq("id", id).select("id");
+    if (error || !data || data.length !== 1) {
+      throw new Error("A exclusão não foi confirmada no banco. Tente novamente.");
+    }
+    state = state.filter((o) => o.id !== id);
+    emit();
+  } finally {
+    alteracoesEmAndamento.delete(id);
+  }
 }
 
 const dias = (n: number) => {
