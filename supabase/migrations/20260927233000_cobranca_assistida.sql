@@ -24,7 +24,7 @@ CREATE POLICY "Dono cria cobrancas para suas ordens" ON public.cobrancas FOR INS
     AND informada_em IS NULL AND confirmada_em IS NULL AND EXISTS (
     SELECT 1 FROM public.ordens o WHERE o.id = ordem_id AND o.user_id = auth.uid()
   ));
-GRANT SELECT, INSERT ON public.cobrancas TO authenticated;
+GRANT SELECT ON public.cobrancas TO authenticated;
 GRANT ALL ON public.cobrancas TO service_role;
 -- The client never gets UPDATE permission: every state transition uses a narrow RPC.
 
@@ -71,3 +71,48 @@ BEGIN
 END $$;
 REVOKE ALL ON FUNCTION public.oficinia_confirmar_cobranca(uuid) FROM PUBLIC,anon;
 GRANT EXECUTE ON FUNCTION public.oficinia_confirmar_cobranca(uuid) TO authenticated;
+
+-- New requests are serialized against other charges and receipts for the same OS.
+-- The request UUID is reused after an uncertain network response.
+CREATE OR REPLACE FUNCTION public.oficinia_criar_cobranca(
+  p_ordem uuid, p_id uuid, p_valor numeric, p_forma text
+) RETURNS public.cobrancas
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
+DECLARE
+  v_os public.ordens%ROWTYPE;
+  v_cobranca public.cobrancas%ROWTYPE;
+  v_total numeric;
+  v_pago numeric;
+  v_reservado numeric;
+BEGIN
+  IF auth.uid() IS NULL OR p_id IS NULL OR p_valor IS NULL OR p_valor <= 0
+    OR p_valor <> round(p_valor,2) OR p_forma IS NULL
+    OR p_forma NOT IN ('Pix','Dinheiro','Cartão') THEN
+    RAISE EXCEPTION 'Dados da cobrança inválidos';
+  END IF;
+  SELECT * INTO v_os FROM public.ordens WHERE id=p_ordem AND user_id=auth.uid() FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'Ordem não encontrada'; END IF;
+  SELECT * INTO v_cobranca FROM public.cobrancas WHERE id=p_id;
+  IF FOUND THEN
+    IF v_cobranca.user_id <> auth.uid() OR v_cobranca.ordem_id <> p_ordem
+      OR v_cobranca.valor <> p_valor OR v_cobranca.forma <> p_forma THEN
+      RAISE EXCEPTION 'Identificador já usado em outra cobrança';
+    END IF;
+    RETURN v_cobranca;
+  END IF;
+  SELECT coalesce(sum((i->>'valor')::numeric),0) INTO v_total
+    FROM jsonb_array_elements(v_os.itens) i;
+  SELECT coalesce(sum((p->>'valor')::numeric),0) INTO v_pago
+    FROM jsonb_array_elements(v_os.pagamentos) p;
+  SELECT coalesce(sum(valor),0) INTO v_reservado FROM public.cobrancas
+    WHERE ordem_id=p_ordem AND status IN ('aguardando','informado');
+  IF v_total - v_pago - v_reservado < p_valor THEN
+    RAISE EXCEPTION 'Valor excede o saldo ainda não solicitado';
+  END IF;
+  INSERT INTO public.cobrancas (id,user_id,ordem_id,valor,forma)
+    VALUES (p_id,auth.uid(),p_ordem,p_valor,p_forma)
+    RETURNING * INTO v_cobranca;
+  RETURN v_cobranca;
+END $$;
+REVOKE ALL ON FUNCTION public.oficinia_criar_cobranca(uuid,uuid,numeric,text) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.oficinia_criar_cobranca(uuid,uuid,numeric,text) TO authenticated;
