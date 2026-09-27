@@ -8,7 +8,7 @@ import registrarPagamento from "./tools/registrar-pagamento";
 
 const supabaseUrl = import.meta.env["VITE_SUPABASE_URL"] || process.env["SUPABASE_URL"];
 if (!supabaseUrl) throw new Error("A URL do Supabase é obrigatória para iniciar as ferramentas MCP.");
-const authIssuer = new URL("/auth/v1", supabaseUrl).toString().replace(/\\/$/, "");
+const authIssuer = new URL("/auth/v1", supabaseUrl).toString();
 
 export default defineMcp({
   name: "oficinia",
