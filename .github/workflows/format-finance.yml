@@ -1,6 +1,7 @@
 name: OficinIA - formatacao dos arquivos alterados
 on:
-  workflow_dispatch:
+  push:
+    branches: [feature/oficinia-v08-cobranca-assistida]
 jobs:
   format:
     if: github.actor != 'github-actions[bot]'
@@ -15,12 +16,12 @@ jobs:
       - run: bun install --frozen-lockfile
       - name: Formatar somente os tres arquivos alterados
         run: |
-          bunx prettier --write src/components/CobrancaAssistida.tsx 'src/routes/ordem.$id.tsx' src/integrations/supabase/types.ts
+          bunx prettier --write src/components/CobrancaAssistida.tsx 'src/routes/ordem.$id.tsx' src/routes/financeiro.tsx src/integrations/supabase/types.ts
       - name: Registrar formatacao sem reescrever historico
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/components/CobrancaAssistida.tsx 'src/routes/ordem.$id.tsx' src/integrations/supabase/types.ts
+          git add src/components/CobrancaAssistida.tsx 'src/routes/ordem.$id.tsx' src/routes/financeiro.tsx src/integrations/supabase/types.ts
           if ! git diff --cached --quiet; then
             git commit -m "style: format finance-related files"
             git push origin HEAD:feature/oficinia-v08-cobranca-assistida
