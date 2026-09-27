@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 
-test("anonymous access redirects to login and invalid password shows a safe error", async ({ page }) => {
+test("anonymous access redirects to login and invalid password shows a safe error", async ({
+  page,
+}) => {
   await page.route("https://example.supabase.co/**", async (route) => {
     if (route.request().url().includes("/auth/v1/token")) {
       await route.fulfill({

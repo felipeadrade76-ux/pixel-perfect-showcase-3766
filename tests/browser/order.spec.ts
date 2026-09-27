@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 
-test("an authenticated user can create an OS and reopen it in a mobile viewport", async ({ page }) => {
+test("an authenticated user can create an OS and reopen it in a mobile viewport", async ({
+  page,
+}) => {
   const userId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
   const user = {
     id: userId,
@@ -20,14 +22,17 @@ test("an authenticated user can create an OS and reopen it in a mobile viewport"
       "." +
       encode({ sub: u.id, aud: "authenticated", role: "authenticated", exp: expiration }) +
       ".fakesignature";
-    localStorage.setItem("sb-example-auth-token", JSON.stringify({
-      access_token: token,
-      refresh_token: "fake-refresh-token",
-      token_type: "bearer",
-      expires_in: 7200,
-      expires_at: expiration,
-      user: u,
-    }));
+    localStorage.setItem(
+      "sb-example-auth-token",
+      JSON.stringify({
+        access_token: token,
+        refresh_token: "fake-refresh-token",
+        token_type: "bearer",
+        expires_in: 7200,
+        expires_at: expiration,
+        user: u,
+      }),
+    );
   }, user);
 
   let saved: Record<string, unknown> | null = null;
@@ -37,18 +42,39 @@ test("an authenticated user can create an OS and reopen it in a mobile viewport"
       if (route.request().method() === "POST") {
         const posted = JSON.parse(route.request().postData() ?? "{}");
         saved = {
-          telefone: null, marca: null, modelo: null, serie: null, observacoes: null,
-          prazo: null, concluida_em: null, entregue_em: null,
-          ...posted, user_id: userId, numero: "OS-0001", revisao: 0,
+          telefone: null,
+          marca: null,
+          modelo: null,
+          serie: null,
+          observacoes: null,
+          prazo: null,
+          concluida_em: null,
+          entregue_em: null,
+          ...posted,
+          user_id: userId,
+          numero: "OS-0001",
+          revisao: 0,
         };
-        await route.fulfill({ status: 201, contentType: "application/json", body: JSON.stringify(saved) });
+        await route.fulfill({
+          status: 201,
+          contentType: "application/json",
+          body: JSON.stringify(saved),
+        });
       } else {
-        await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(saved ? [saved] : []) });
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(saved ? [saved] : []),
+        });
       }
     } else if (url.pathname === "/rest/v1/cobrancas") {
       await route.fulfill({ status: 200, contentType: "application/json", body: "[]" });
     } else if (url.pathname === "/auth/v1/user") {
-      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(user) });
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(user),
+      });
     } else {
       await route.fulfill({ status: 200, contentType: "application/json", body: "{}" });
     }
