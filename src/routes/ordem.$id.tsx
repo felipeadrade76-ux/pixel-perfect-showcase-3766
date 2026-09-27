@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowLeft, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
@@ -9,6 +9,7 @@ import {
   alterarStatus,
   dataHora,
   editarOrdem,
+  excluirOrdem,
   moeda,
   pago,
   registrarPagamento,
@@ -41,6 +42,7 @@ const bloco = "rounded-2xl border border-border bg-card p-4";
 
 function Detalhe() {
   const { id } = Route.useParams();
+  const navigate = useNavigate();
   const ordem = useOrdem(id);
   const [editando, setEditando] = useState(false);
   const [item, setItem] = useState({ descricao: "", tipo: "Peça", valor: "" });
@@ -321,6 +323,25 @@ function Detalhe() {
             Confirme o recebimento no banco ou maquininha antes de registrar. O Pix não tem baixa
             automática nesta versão.
           </p>
+        </section>
+
+        <section className={bloco}>
+          <h2 className="mb-2 font-bold">Excluir ordem</h2>
+          <p className="mb-3 text-xs text-muted-foreground">
+            A exclusão é irreversível. Ordens com pagamentos não podem ser excluídas.
+          </p>
+          <button
+            disabled={salvandoOrdem || salvandoPagamento || ordem.pagamentos.length > 0}
+            className="rounded-xl border border-destructive px-4 py-3 text-sm font-semibold text-destructive disabled:opacity-50"
+            onClick={async () => {
+              if (!window.confirm("Excluir definitivamente esta ordem de serviço sem pagamentos?")) return;
+              if (await executarAlteracao(() => excluirOrdem(ordem.id))) {
+                navigate({ to: "/ordens" });
+              }
+            }}
+          >
+            Excluir ordem sem pagamentos
+          </button>
         </section>
 
         <section className={bloco}>
