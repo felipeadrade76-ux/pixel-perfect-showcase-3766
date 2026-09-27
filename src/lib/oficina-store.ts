@@ -290,7 +290,8 @@ export async function registrarPagamento(
   pagamentosEmAndamento.add(id);
   try {
     const { data, error } = await supabase.from("ordens").select("*").eq("id", id).single();
-    if (error || !data) throw new Error("Não foi possível consultar o saldo atualizado. Tente novamente.");
+    if (error || !data)
+      throw new Error("Não foi possível consultar o saldo atualizado. Tente novamente.");
     const atual = fromRow(data as Row);
     const pendente = saldo(atual);
     const arredondado = Math.round(valor * 100) / 100;
@@ -301,13 +302,26 @@ export async function registrarPagamento(
     const alterada: Ordem = {
       ...atual,
       pagamentos: [...atual.pagamentos, { id: uid(), valor: arredondado, forma, data: agora }],
-      historico: [...atual.historico, { data: agora, texto: `Pagamento de ${moeda(arredondado)} registrado manualmente via ${forma}` }],
+      historico: [
+        ...atual.historico,
+        {
+          data: agora,
+          texto: `Pagamento de ${moeda(arredondado)} registrado manualmente via ${forma}`,
+        },
+      ],
     };
     const { id: rowId, ...resto } = toRow(alterada);
     const { data: salva, error: erroSalvar } = await supabase
-      .from("ordens").update(resto).eq("id", rowId).select("*").single();
-    if (erroSalvar || !salva) throw new Error("O pagamento não foi confirmado no banco. Confira a conexão e tente novamente.");
-    state = state.map((o) => o.id === id ? fromRow(salva as Row) : o);
+      .from("ordens")
+      .update(resto)
+      .eq("id", rowId)
+      .select("*")
+      .single();
+    if (erroSalvar || !salva)
+      throw new Error(
+        "O pagamento não foi confirmado no banco. Confira a conexão e tente novamente.",
+      );
+    state = state.map((o) => (o.id === id ? fromRow(salva as Row) : o));
     emit();
   } finally {
     pagamentosEmAndamento.delete(id);
@@ -333,10 +347,39 @@ const dias = (n: number) => {
 /** Cria ordens fictícias de exemplo para quem está começando (ação do usuário). */
 export function carregarExemplos() {
   const ex: Parameters<typeof criarOrdem>[0][] = [
-    { cliente: "João Pereira", telefone: "(31) 98888-1122", tipoMaquina: "Motosserra", marca: "Stihl", modelo: "MS 170", problema: "Não pega a frio e perde força no corte.", prazo: dias(2) },
-    { cliente: "Maria Santos", telefone: "(31) 97777-4455", tipoMaquina: "Roçadeira", marca: "Husqvarna", modelo: "143R", problema: "Vazamento de combustível no tanque.", prazo: dias(3) },
-    { cliente: "Sítio Boa Vista", tipoMaquina: "Gerador", marca: "Toyama", problema: "Gerador liga mas não gera energia.", prazo: dias(-1) },
-    { cliente: "Carlos Dias", telefone: "(31) 96666-7788", tipoMaquina: "Cortador de grama", marca: "Tramontina", problema: "Lâmina desbalanceada, muita vibração.", prazo: dias(0) },
+    {
+      cliente: "João Pereira",
+      telefone: "(31) 98888-1122",
+      tipoMaquina: "Motosserra",
+      marca: "Stihl",
+      modelo: "MS 170",
+      problema: "Não pega a frio e perde força no corte.",
+      prazo: dias(2),
+    },
+    {
+      cliente: "Maria Santos",
+      telefone: "(31) 97777-4455",
+      tipoMaquina: "Roçadeira",
+      marca: "Husqvarna",
+      modelo: "143R",
+      problema: "Vazamento de combustível no tanque.",
+      prazo: dias(3),
+    },
+    {
+      cliente: "Sítio Boa Vista",
+      tipoMaquina: "Gerador",
+      marca: "Toyama",
+      problema: "Gerador liga mas não gera energia.",
+      prazo: dias(-1),
+    },
+    {
+      cliente: "Carlos Dias",
+      telefone: "(31) 96666-7788",
+      tipoMaquina: "Cortador de grama",
+      marca: "Tramontina",
+      problema: "Lâmina desbalanceada, muita vibração.",
+      prazo: dias(0),
+    },
   ];
   ex.forEach((d) => criarOrdem(d));
 }
