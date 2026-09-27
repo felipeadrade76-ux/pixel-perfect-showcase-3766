@@ -3,7 +3,8 @@ import { beforeEach, expect, mock, test } from "bun:test";
 // Isolate store business logic from network calls and React's rendering runtime.
 let rows: Record<string, unknown>[] = [];
 let deferRange = false;
-let finishRange: ((response: { data: Record<string, unknown>[]; error: null }) => void) | null = null;
+let finishRange: ((response: { data: Record<string, unknown>[]; error: null }) => void) | null =
+  null;
 let rpcShouldFail = false;
 const rpcIds: string[] = [];
 const row = (i: number) => ({
@@ -32,8 +33,12 @@ const fakeSupabase = {
   from(table: string) {
     if (table !== "ordens") throw new Error("Unexpected table: " + table);
     return {
-      select() { return this; },
-      order() { return this; },
+      select() {
+        return this;
+      },
+      order() {
+        return this;
+      },
       range(start: number, end: number) {
         if (deferRange) {
           deferRange = false;

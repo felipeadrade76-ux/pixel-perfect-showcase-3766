@@ -121,7 +121,9 @@ export function CobrancaAssistida({ ordem }: { ordem: Ordem }) {
         await loadOrdens();
         setAviso("Recebimento confirmado manualmente e saldo atualizado.");
       } catch {
-        setAviso("Recebimento confirmado no banco. Não foi possível atualizar a tela; recarregue para ver o saldo.");
+        setAviso(
+          "Recebimento confirmado no banco. Não foi possível atualizar a tela; recarregue para ver o saldo.",
+        );
       }
     });
   }
@@ -183,8 +185,20 @@ export function CobrancaAssistida({ ordem }: { ordem: Ordem }) {
           {aviso}
         </p>
       )}
-      {carregandoCobrancas && <p role="status" className="mt-3 text-sm text-muted-foreground">Consultando cobranças...</p>}
-      {!carregandoCobrancas && erro && <button type="button" onClick={() => setRecarregar((n) => n + 1)} className="mt-2 rounded-lg border border-input px-3 py-2 text-xs font-semibold">Atualizar cobranças</button>}
+      {carregandoCobrancas && (
+        <p role="status" className="mt-3 text-sm text-muted-foreground">
+          Consultando cobranças...
+        </p>
+      )}
+      {!carregandoCobrancas && erro && (
+        <button
+          type="button"
+          onClick={() => setRecarregar((n) => n + 1)}
+          className="mt-2 rounded-lg border border-input px-3 py-2 text-xs font-semibold"
+        >
+          Atualizar cobranças
+        </button>
+      )}
       <div className="mt-4 space-y-3">
         {cobrancas.map((c) => (
           <div key={c.id} className="rounded-xl border border-border p-3">
