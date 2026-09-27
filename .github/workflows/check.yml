@@ -64,3 +64,5 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/tests/assisted-charges.sql
       - name: Verify two concurrent payments
         run: bash supabase/tests/concurrency.sh
+      - name: Verify concurrent assisted charge reservations
+        run: bash supabase/tests/charge-concurrency.sh
