@@ -18,6 +18,5 @@ jobs:
       - name: ESLint completo dos arquivos alterados
         run: |
           bunx eslint src/routes/financeiro.tsx 'src/routes/ordem.$id.tsx' src/lib/oficina-store.ts
-      - name: Lint completo - diagnostico de formatacao preexistente
-        run: bun run lint
-        continue-on-error: true
+      - name: Lint completo - zero erros e avisos
+        run: bunx eslint . --max-warnings 0
