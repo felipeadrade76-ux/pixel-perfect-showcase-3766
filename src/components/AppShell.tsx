@@ -1,8 +1,9 @@
 import { Link } from "@tanstack/react-router";
-import { Home, ClipboardList, CalendarDays, Wallet, Plus, Wrench } from "lucide-react";
+import { Home, ClipboardList, CalendarDays, Wallet, Plus, Wrench, LogOut } from "lucide-react";
 import type { ReactNode } from "react";
-import { useEffect } from "react";
-import { loadOrdens } from "@/lib/oficina-store";
+import { useEffect, useState } from "react";
+import { loadOrdens, limparOrdens } from "@/lib/oficina-store";
+import { supabase } from "@/integrations/supabase/client";
 
 const nav = [
   { to: "/", label: "Início", icon: Home },
@@ -10,6 +11,11 @@ const nav = [
   { to: "/agenda", label: "Agenda", icon: CalendarDays },
   { to: "/financeiro", label: "Financeiro", icon: Wallet },
 ] as const;
+
+function irParaLogin() {
+  const next = window.location.pathname + window.location.search;
+  window.location.href = "/login?next=" + encodeURIComponent(next);
+}
 
 export function AppShell({
   title,
@@ -20,9 +26,24 @@ export function AppShell({
   subtitle?: string;
   children: ReactNode;
 }) {
+  const [pronto, setPronto] = useState(false);
+
   useEffect(() => {
-    loadOrdens();
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session) return irParaLogin();
+      setPronto(true);
+      loadOrdens();
+    });
+    const { data } = supabase.auth.onAuthStateChange((e) => {
+      if (e === "SIGNED_OUT") {
+        limparOrdens();
+        irParaLogin();
+      }
+    });
+    return () => data.subscription.unsubscribe();
   }, []);
+
+  const sair = () => supabase.auth.signOut();
 
   return (
     <div className="min-h-screen bg-background md:flex">
@@ -53,14 +74,25 @@ export function AppShell({
         >
           <Plus className="h-5 w-5" /> Nova entrada
         </Link>
+        <button
+          onClick={sair}
+          className="mt-auto flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium opacity-80 hover:bg-sidebar-accent"
+        >
+          <LogOut className="h-5 w-5" /> Sair
+        </button>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-10 border-b border-border bg-primary px-4 py-4 text-primary-foreground md:bg-card md:text-foreground">
-          <h1 className="truncate text-xl font-bold">{title}</h1>
-          {subtitle ? <p className="truncate text-sm opacity-80">{subtitle}</p> : null}
+        <header className="sticky top-0 z-10 flex items-center gap-2 border-b border-border bg-primary px-4 py-4 text-primary-foreground md:bg-card md:text-foreground">
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate text-xl font-bold">{title}</h1>
+            {subtitle ? <p className="truncate text-sm opacity-80">{subtitle}</p> : null}
+          </div>
+          <button onClick={sair} aria-label="Sair" className="p-2 md:hidden">
+            <LogOut className="h-5 w-5" />
+          </button>
         </header>
-        <main className="flex-1 p-4 pb-28 md:pb-8">{children}</main>
+        <main className="flex-1 p-4 pb-28 md:pb-8">{pronto ? children : null}</main>
       </div>
 
       <nav className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-4 border-t border-border bg-card md:hidden">

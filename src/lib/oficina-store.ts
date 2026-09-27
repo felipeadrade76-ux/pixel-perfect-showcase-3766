@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const STATUSES = [
   "Recebida",
@@ -52,166 +53,104 @@ export type Ordem = {
   pagamentos: Pagamento[];
 };
 
-const KEY = "oficina-inteligente-v1";
+const uid = () => crypto.randomUUID();
 
-const uid = () => Math.random().toString(36).slice(2, 10);
-
-const dias = (n: number) => {
-  const d = new Date();
-  d.setDate(d.getDate() + n);
-  return d.toISOString();
+type Row = {
+  id: string;
+  numero: string;
+  cliente: string;
+  telefone: string | null;
+  tipo_maquina: string;
+  marca: string | null;
+  modelo: string | null;
+  serie: string | null;
+  problema: string;
+  observacoes: string | null;
+  prazo: string | null;
+  status: string;
+  criada_em: string;
+  concluida_em: string | null;
+  entregue_em: string | null;
+  historico: unknown;
+  itens: unknown;
+  pagamentos: unknown;
 };
 
-function demo(): Ordem[] {
-  return [
-    {
-      id: uid(),
-      numero: "OS-0001",
-      cliente: "João Pereira",
-      telefone: "(31) 98888-1122",
-      tipoMaquina: "Motosserra",
-      marca: "Stihl",
-      modelo: "MS 170",
-      problema: "Não pega a frio e perde força no corte.",
-      status: "Em manutenção",
-      prazo: dias(2),
-      criadaEm: dias(-4),
-      historico: [
-        { data: dias(-4), texto: "Ordem criada" },
-        { data: dias(-3), texto: "Status alterado para Em diagnóstico" },
-        { data: dias(-1), texto: "Status alterado para Em manutenção" },
-      ],
-      itens: [
-        { id: uid(), descricao: "Carburador completo", tipo: "Peça", valor: 180 },
-        { id: uid(), descricao: "Revisão geral", tipo: "Mão de obra", valor: 120 },
-      ],
-      pagamentos: [{ id: uid(), valor: 100, forma: "Pix", data: dias(-1) }],
-    },
-    {
-      id: uid(),
-      numero: "OS-0002",
-      cliente: "Maria Santos",
-      telefone: "(31) 97777-4455",
-      tipoMaquina: "Roçadeira",
-      marca: "Husqvarna",
-      modelo: "143R",
-      problema: "Vazamento de combustível no tanque.",
-      status: "Recebida",
-      prazo: dias(3),
-      criadaEm: dias(-1),
-      historico: [{ data: dias(-1), texto: "Ordem criada" }],
-      itens: [],
-      pagamentos: [],
-    },
-    {
-      id: uid(),
-      numero: "OS-0003",
-      cliente: "Sítio Boa Vista",
-      tipoMaquina: "Gerador",
-      marca: "Toyama",
-      problema: "Gerador liga mas não gera energia.",
-      status: "Aguardando peças",
-      prazo: dias(-1),
-      criadaEm: dias(-8),
-      historico: [
-        { data: dias(-8), texto: "Ordem criada" },
-        { data: dias(-6), texto: "Status alterado para Aguardando peças" },
-      ],
-      itens: [{ id: uid(), descricao: "Placa AVR", tipo: "Peça", valor: 260 }],
-      pagamentos: [],
-    },
-    {
-      id: uid(),
-      numero: "OS-0004",
-      cliente: "Carlos Dias",
-      telefone: "(31) 96666-7788",
-      tipoMaquina: "Cortador de grama",
-      marca: "Tramontina",
-      problema: "Lâmina desbalanceada, muita vibração.",
-      status: "Pronta",
-      prazo: dias(0),
-      criadaEm: dias(-5),
-      concluidaEm: dias(-1),
-      historico: [
-        { data: dias(-5), texto: "Ordem criada" },
-        { data: dias(-1), texto: "Serviço concluído — máquina pronta para retirada" },
-      ],
-      itens: [
-        { id: uid(), descricao: "Lâmina nova", tipo: "Peça", valor: 95 },
-        { id: uid(), descricao: "Balanceamento", tipo: "Mão de obra", valor: 60 },
-      ],
-      pagamentos: [],
-    },
-    {
-      id: uid(),
-      numero: "OS-0005",
-      cliente: "Fazenda Três Rios",
-      tipoMaquina: "Motobomba",
-      marca: "Branco",
-      modelo: "B4T 710",
-      problema: "Perda de pressão na bomba.",
-      status: "Aguardando aprovação",
-      prazo: dias(4),
-      criadaEm: dias(-2),
-      historico: [
-        { data: dias(-2), texto: "Ordem criada" },
-        { data: dias(-2), texto: "Status alterado para Aguardando aprovação" },
-      ],
-      itens: [{ id: uid(), descricao: "Kit selo mecânico", tipo: "Peça", valor: 140 }],
-      pagamentos: [],
-    },
-    {
-      id: uid(),
-      numero: "OS-0006",
-      cliente: "Antônio Lima",
-      telefone: "(31) 95555-2211",
-      tipoMaquina: "Máquina agrícola",
-      marca: "Agrale",
-      problema: "Troca de óleo e revisão preventiva.",
-      status: "Entregue",
-      criadaEm: dias(-12),
-      concluidaEm: dias(-9),
-      entregueEm: dias(-8),
-      historico: [
-        { data: dias(-12), texto: "Ordem criada" },
-        { data: dias(-9), texto: "Serviço concluído — máquina pronta para retirada" },
-        { data: dias(-8), texto: "Status alterado para Entregue" },
-      ],
-      itens: [
-        { id: uid(), descricao: "Óleo e filtros", tipo: "Peça", valor: 210 },
-        { id: uid(), descricao: "Revisão preventiva", tipo: "Mão de obra", valor: 150 },
-      ],
-      pagamentos: [{ id: uid(), valor: 360, forma: "Dinheiro", data: dias(-8) }],
-    },
-  ];
+const u = (v: string | null) => v ?? undefined;
+
+function fromRow(r: Row): Ordem {
+  return {
+    id: r.id,
+    numero: r.numero,
+    cliente: r.cliente,
+    telefone: u(r.telefone),
+    tipoMaquina: r.tipo_maquina,
+    marca: u(r.marca),
+    modelo: u(r.modelo),
+    serie: u(r.serie),
+    problema: r.problema,
+    observacoes: u(r.observacoes),
+    prazo: u(r.prazo),
+    status: r.status as Status,
+    criadaEm: r.criada_em,
+    concluidaEm: u(r.concluida_em),
+    entregueEm: u(r.entregue_em),
+    historico: (r.historico as Evento[]) ?? [],
+    itens: (r.itens as Item[]) ?? [],
+    pagamentos: (r.pagamentos as Pagamento[]) ?? [],
+  };
 }
 
-let state: Ordem[] = demo();
-let loaded = false;
+function toRow(o: Ordem) {
+  return {
+    id: o.id,
+    numero: o.numero,
+    cliente: o.cliente,
+    telefone: o.telefone || null,
+    tipo_maquina: o.tipoMaquina,
+    marca: o.marca || null,
+    modelo: o.modelo || null,
+    serie: o.serie || null,
+    problema: o.problema,
+    observacoes: o.observacoes || null,
+    prazo: o.prazo || null,
+    status: o.status,
+    criada_em: o.criadaEm,
+    concluida_em: o.concluidaEm || null,
+    entregue_em: o.entregueEm || null,
+    historico: o.historico,
+    itens: o.itens,
+    pagamentos: o.pagamentos,
+  };
+}
+
+let state: Ordem[] = [];
+let carregando = false;
 const listeners = new Set<() => void>();
 
 function emit() {
   listeners.forEach((l) => l());
 }
 
-function persist() {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(state));
-  } catch {
-    /* ignore */
-  }
+function erro(e: unknown) {
+  console.error("Falha ao salvar na nuvem", e);
 }
 
-export function loadOrdens() {
-  if (loaded || typeof window === "undefined") return;
-  loaded = true;
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (raw) state = JSON.parse(raw) as Ordem[];
-    else persist();
-  } catch {
-    /* ignore */
-  }
+export async function loadOrdens() {
+  if (typeof window === "undefined" || carregando) return;
+  carregando = true;
+  const { data, error } = await supabase
+    .from("ordens")
+    .select("*")
+    .order("criada_em", { ascending: false });
+  carregando = false;
+  if (error) return erro(error);
+  state = (data as Row[]).map(fromRow);
+  emit();
+}
+
+export function limparOrdens() {
+  state = [];
   emit();
 }
 
@@ -232,10 +171,20 @@ export function useOrdem(id: string) {
   return useOrdens().find((o) => o.id === id);
 }
 
+function salvar(o: Ordem) {
+  const { id, ...rest } = toRow(o);
+  supabase
+    .from("ordens")
+    .update(rest)
+    .eq("id", id)
+    .then(({ error }) => error && erro(error));
+}
+
 function update(id: string, fn: (o: Ordem) => Ordem) {
-  state = state.map((o) => (o.id === id ? fn(o) : o));
-  persist();
+  let changed: Ordem | undefined;
+  state = state.map((o) => (o.id === id ? (changed = fn(o)) : o));
   emit();
+  if (changed) salvar(changed);
 }
 
 export function proximoNumero() {
@@ -269,8 +218,11 @@ export function criarOrdem(
     pagamentos: [],
   };
   state = [nova, ...state];
-  persist();
   emit();
+  supabase
+    .from("ordens")
+    .insert(toRow(nova))
+    .then(({ error }) => error && erro(error));
   return nova;
 }
 
@@ -332,8 +284,29 @@ export function registrarPagamento(id: string, valor: number, forma: Pagamento["
 
 export function excluirOrdem(id: string) {
   state = state.filter((o) => o.id !== id);
-  persist();
   emit();
+  supabase
+    .from("ordens")
+    .delete()
+    .eq("id", id)
+    .then(({ error }) => error && erro(error));
+}
+
+const dias = (n: number) => {
+  const d = new Date();
+  d.setDate(d.getDate() + n);
+  return d.toISOString();
+};
+
+/** Cria ordens fictícias de exemplo para quem está começando (ação do usuário). */
+export function carregarExemplos() {
+  const ex: Parameters<typeof criarOrdem>[0][] = [
+    { cliente: "João Pereira", telefone: "(31) 98888-1122", tipoMaquina: "Motosserra", marca: "Stihl", modelo: "MS 170", problema: "Não pega a frio e perde força no corte.", prazo: dias(2) },
+    { cliente: "Maria Santos", telefone: "(31) 97777-4455", tipoMaquina: "Roçadeira", marca: "Husqvarna", modelo: "143R", problema: "Vazamento de combustível no tanque.", prazo: dias(3) },
+    { cliente: "Sítio Boa Vista", tipoMaquina: "Gerador", marca: "Toyama", problema: "Gerador liga mas não gera energia.", prazo: dias(-1) },
+    { cliente: "Carlos Dias", telefone: "(31) 96666-7788", tipoMaquina: "Cortador de grama", marca: "Tramontina", problema: "Lâmina desbalanceada, muita vibração.", prazo: dias(0) },
+  ];
+  ex.forEach((d) => criarOrdem(d));
 }
 
 export const total = (o: Ordem) => o.itens.reduce((s, i) => s + i.valor, 0);
