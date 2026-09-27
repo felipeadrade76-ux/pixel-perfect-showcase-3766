@@ -23,7 +23,7 @@ export default defineTool({
       historico: [...o.historico, { data: agora, texto }],
       ...(status === "Pronta" ? { concluida_em: agora } : {}),
       ...(status === "Entregue" ? { entregue_em: agora } : {}),
-    });
+    }, o.revisao);
     return { content: txt({ numero: o.numero, status }) };
   },
 });
