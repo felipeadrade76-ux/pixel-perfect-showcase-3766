@@ -14,7 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      ordens: {
+        Row: {
+          cliente: string
+          concluida_em: string | null
+          criada_em: string
+          entregue_em: string | null
+          historico: Json
+          id: string
+          itens: Json
+          marca: string | null
+          modelo: string | null
+          numero: string
+          observacoes: string | null
+          pagamentos: Json
+          prazo: string | null
+          problema: string
+          serie: string | null
+          status: string
+          telefone: string | null
+          tipo_maquina: string
+          user_id: string
+        }
+        Insert: {
+          cliente: string
+          concluida_em?: string | null
+          criada_em?: string
+          entregue_em?: string | null
+          historico?: Json
+          id?: string
+          itens?: Json
+          marca?: string | null
+          modelo?: string | null
+          numero: string
+          observacoes?: string | null
+          pagamentos?: Json
+          prazo?: string | null
+          problema: string
+          serie?: string | null
+          status?: string
+          telefone?: string | null
+          tipo_maquina: string
+          user_id?: string
+        }
+        Update: {
+          cliente?: string
+          concluida_em?: string | null
+          criada_em?: string
+          entregue_em?: string | null
+          historico?: Json
+          id?: string
+          itens?: Json
+          marca?: string | null
+          modelo?: string | null
+          numero?: string
+          observacoes?: string | null
+          pagamentos?: Json
+          prazo?: string | null
+          problema?: string
+          serie?: string | null
+          status?: string
+          telefone?: string | null
+          tipo_maquina?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
