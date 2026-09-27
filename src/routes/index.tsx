@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Plus, AlertTriangle, Wrench, Search, PackageCheck } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { StatusBadge } from "@/components/StatusBadge";
-import { atrasada, dataCurta, useOrdens } from "@/lib/oficina-store";
+import { atrasada, carregarExemplos, dataCurta, useOrdens } from "@/lib/oficina-store";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -64,9 +64,17 @@ function Painel() {
       <h2 className="mb-2 mt-6 text-base font-bold text-foreground">Máquinas na oficina</h2>
       <div className="space-y-3">
         {ativas.length === 0 ? (
-          <p className="rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">
-            Nenhuma máquina na oficina no momento.
-          </p>
+          <div className="rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">
+            <p>Nenhuma máquina na oficina no momento.</p>
+            {ordens.length === 0 ? (
+              <button
+                onClick={carregarExemplos}
+                className="mt-3 rounded-lg border border-input px-4 py-2 font-medium text-foreground"
+              >
+                Carregar ordens de exemplo
+              </button>
+            ) : null}
+          </div>
         ) : null}
         {ativas.map((o) => (
           <Link

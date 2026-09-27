@@ -12,9 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as FinanceiroRouteImport } from './routes/financeiro'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as NovaRouteImport } from './routes/nova'
 import { Route as OrdensRouteImport } from './routes/ordens'
 import { Route as OrdemIdRouteImport } from './routes/ordem.$id'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -29,6 +31,11 @@ const AgendaRoute = AgendaRouteImport.update({
 const FinanceiroRoute = FinanceiroRouteImport.update({
   id: '/financeiro',
   path: '/financeiro',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NovaRoute = NovaRouteImport.update({
@@ -46,55 +53,85 @@ const OrdemIdRoute = OrdemIdRouteImport.update({
   path: '/ordem/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/agenda': typeof AgendaRoute
   '/financeiro': typeof FinanceiroRoute
+  '/login': typeof LoginRoute
   '/nova': typeof NovaRoute
   '/ordens': typeof OrdensRoute
   '/ordem/$id': typeof OrdemIdRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/agenda': typeof AgendaRoute
   '/financeiro': typeof FinanceiroRoute
+  '/login': typeof LoginRoute
   '/nova': typeof NovaRoute
   '/ordens': typeof OrdensRoute
   '/ordem/$id': typeof OrdemIdRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/agenda': typeof AgendaRoute
   '/financeiro': typeof FinanceiroRoute
+  '/login': typeof LoginRoute
   '/nova': typeof NovaRoute
   '/ordens': typeof OrdensRoute
   '/ordem/$id': typeof OrdemIdRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/agenda' | '/financeiro' | '/nova' | '/ordens' | '/ordem/$id'
+    | '/'
+    | '/agenda'
+    | '/financeiro'
+    | '/login'
+    | '/nova'
+    | '/ordens'
+    | '/ordem/$id'
+    | '/.lovable/oauth/consent'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/agenda' | '/financeiro' | '/nova' | '/ordens' | '/ordem/$id'
+  to:
+    | '/'
+    | '/agenda'
+    | '/financeiro'
+    | '/login'
+    | '/nova'
+    | '/ordens'
+    | '/ordem/$id'
+    | '/.lovable/oauth/consent'
   id:
     | '__root__'
     | '/'
     | '/agenda'
     | '/financeiro'
+    | '/login'
     | '/nova'
     | '/ordens'
     | '/ordem/$id'
+    | '/.lovable/oauth/consent'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AgendaRoute: typeof AgendaRoute
   FinanceiroRoute: typeof FinanceiroRoute
+  LoginRoute: typeof LoginRoute
   NovaRoute: typeof NovaRoute
   OrdensRoute: typeof OrdensRoute
   OrdemIdRoute: typeof OrdemIdRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -120,6 +157,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FinanceiroRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/nova': {
       id: '/nova'
       path: '/nova'
@@ -141,6 +185,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrdemIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -148,9 +199,11 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AgendaRoute: AgendaRoute,
   FinanceiroRoute: FinanceiroRoute,
+  LoginRoute: LoginRoute,
   NovaRoute: NovaRoute,
   OrdensRoute: OrdensRoute,
   OrdemIdRoute: OrdemIdRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
