@@ -110,6 +110,7 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f supabase/tests/legacy.sql
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20260927230000_oficinia_integridade.sql
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20260927233000_cobranca_assistida.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20260928010000_auditoria_regressao.sql
       - name: Verify numbering, permissions, RLS and payment rules
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/tests/phase2.sql
       - name: Verify assisted charges and explicit confirmation
@@ -118,3 +119,5 @@ jobs:
         run: bash supabase/tests/concurrency.sh
       - name: Verify concurrent assisted charge reservations
         run: bash supabase/tests/charge-concurrency.sh
+      - name: Audit pending-charge invariants and retry safety
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/tests/audit-regressions.sql
