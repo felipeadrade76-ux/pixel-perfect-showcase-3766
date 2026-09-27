@@ -15,7 +15,7 @@ export default defineTool({
   annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
   handler: async ({ ordem, valor, forma, requisicaoId }, ctx) => {
     const o = await buscar(ctx, ordem);
-    if (!Number.isFinite(valor) || Math.round(valor * 100) !== valor * 100) {
+    if (!Number.isFinite(valor) || Math.abs(valor * 100 - Math.round(valor * 100)) > 1e-7) {
       throw new ToolError("Valor inválido: use no máximo duas casas decimais.");
     }
     const { data, error } = await db(ctx).rpc("oficinia_registrar_pagamento", {
