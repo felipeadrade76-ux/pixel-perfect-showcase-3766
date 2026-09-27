@@ -5,9 +5,7 @@
   "auth": {
     "type": "oauth",
     "issuer": "https://vpykwmcspyfykoesanwt.supabase.co/auth/v1",
-    "accepted_audiences": [
-      "authenticated"
-    ]
+    "accepted_audiences": ["authenticated"]
   },
   "mcp": {
     "server": {
@@ -67,9 +65,7 @@
               "description": "Número (ex.: OS-0003) ou id da ordem."
             }
           },
-          "required": [
-            "ordem"
-          ],
+          "required": ["ordem"],
           "additionalProperties": false,
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
@@ -116,11 +112,7 @@
               "description": "Previsão de conclusão (data ISO)."
             }
           },
-          "required": [
-            "cliente",
-            "tipoMaquina",
-            "problema"
-          ],
+          "required": ["cliente", "tipoMaquina", "problema"],
           "additionalProperties": false,
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
@@ -156,10 +148,7 @@
               ]
             }
           },
-          "required": [
-            "ordem",
-            "status"
-          ],
+          "required": ["ordem", "status"],
           "additionalProperties": false,
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
@@ -188,10 +177,7 @@
             },
             "tipo": {
               "type": "string",
-              "enum": [
-                "Peça",
-                "Mão de obra"
-              ]
+              "enum": ["Peça", "Mão de obra"]
             },
             "valor": {
               "type": "number",
@@ -199,12 +185,7 @@
               "description": "Valor em reais."
             }
           },
-          "required": [
-            "ordem",
-            "descricao",
-            "tipo",
-            "valor"
-          ],
+          "required": ["ordem", "descricao", "tipo", "valor"],
           "additionalProperties": false,
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
@@ -234,18 +215,10 @@
             },
             "forma": {
               "type": "string",
-              "enum": [
-                "Pix",
-                "Dinheiro",
-                "Cartão"
-              ]
+              "enum": ["Pix", "Dinheiro", "Cartão"]
             }
           },
-          "required": [
-            "ordem",
-            "valor",
-            "forma"
-          ],
+          "required": ["ordem", "valor", "forma"],
           "additionalProperties": false,
           "$schema": "http://json-schema.org/draft-07/schema#"
         },

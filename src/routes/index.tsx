@@ -37,7 +37,12 @@ function Painel() {
     { label: "Em manutenção", n: emManutencao.length, icon: Wrench, cor: "text-primary" },
     { label: "Aguardando diagnóstico", n: diagnostico.length, icon: Search, cor: "text-primary" },
     { label: "Prontas p/ retirada", n: prontas.length, icon: PackageCheck, cor: "text-accent" },
-    { label: "Serviços atrasados", n: atrasadas.length, icon: AlertTriangle, cor: "text-destructive" },
+    {
+      label: "Serviços atrasados",
+      n: atrasadas.length,
+      icon: AlertTriangle,
+      cor: "text-destructive",
+    },
   ];
 
   const ativas = ordens.filter((o) => o.status !== "Entregue");

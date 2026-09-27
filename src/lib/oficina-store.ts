@@ -270,16 +270,62 @@ export function removerItem(id: string, itemId: string) {
   update(id, (o) => ({ ...o, itens: o.itens.filter((i) => i.id !== itemId) }));
 }
 
-export function registrarPagamento(id: string, valor: number, forma: Pagamento["forma"]) {
-  const agora = new Date().toISOString();
-  update(id, (o) => ({
-    ...o,
-    pagamentos: [...o.pagamentos, { id: uid(), valor, forma, data: agora }],
-    historico: [
-      ...o.historico,
-      { data: agora, texto: `Pagamento de ${moeda(valor)} recebido via ${forma}` },
-    ],
-  }));
+const pagamentosEmAndamento = new Set<string>();
+
+/** Confirma o lançamento no Supabase antes de exibir o pagamento como recebido.
+ * Bloqueia cliques simultâneos neste navegador; integração bancária não está implementada.
+ * Ainda requer uma operação transacional no banco para múltiplos dispositivos concorrentes.
+ */
+export async function registrarPagamento(
+  id: string,
+  valor: number,
+  forma: Pagamento["forma"],
+): Promise<void> {
+  if (!Number.isFinite(valor) || valor <= 0 || !["Pix", "Dinheiro", "Cartão"].includes(forma)) {
+    throw new Error("Informe um valor positivo e uma forma de pagamento válida.");
+  }
+  if (pagamentosEmAndamento.has(id)) {
+    throw new Error("Aguarde o lançamento anterior terminar.");
+  }
+  pagamentosEmAndamento.add(id);
+  try {
+    const { data, error } = await supabase.from("ordens").select("*").eq("id", id).single();
+    if (error || !data)
+      throw new Error("Não foi possível consultar o saldo atualizado. Tente novamente.");
+    const atual = fromRow(data as Row);
+    const pendente = saldo(atual);
+    const arredondado = Math.round(valor * 100) / 100;
+    if (arredondado <= 0 || arredondado > Math.round(pendente * 100) / 100) {
+      throw new Error("O valor informado ultrapassa o saldo disponível ou é inválido.");
+    }
+    const agora = new Date().toISOString();
+    const alterada: Ordem = {
+      ...atual,
+      pagamentos: [...atual.pagamentos, { id: uid(), valor: arredondado, forma, data: agora }],
+      historico: [
+        ...atual.historico,
+        {
+          data: agora,
+          texto: `Pagamento de ${moeda(arredondado)} registrado manualmente via ${forma}`,
+        },
+      ],
+    };
+    const { id: rowId, ...resto } = toRow(alterada);
+    const { data: salva, error: erroSalvar } = await supabase
+      .from("ordens")
+      .update(resto)
+      .eq("id", rowId)
+      .select("*")
+      .single();
+    if (erroSalvar || !salva)
+      throw new Error(
+        "O pagamento não foi confirmado no banco. Confira a conexão e tente novamente.",
+      );
+    state = state.map((o) => (o.id === id ? fromRow(salva as Row) : o));
+    emit();
+  } finally {
+    pagamentosEmAndamento.delete(id);
+  }
 }
 
 export function excluirOrdem(id: string) {
@@ -301,10 +347,39 @@ const dias = (n: number) => {
 /** Cria ordens fictícias de exemplo para quem está começando (ação do usuário). */
 export function carregarExemplos() {
   const ex: Parameters<typeof criarOrdem>[0][] = [
-    { cliente: "João Pereira", telefone: "(31) 98888-1122", tipoMaquina: "Motosserra", marca: "Stihl", modelo: "MS 170", problema: "Não pega a frio e perde força no corte.", prazo: dias(2) },
-    { cliente: "Maria Santos", telefone: "(31) 97777-4455", tipoMaquina: "Roçadeira", marca: "Husqvarna", modelo: "143R", problema: "Vazamento de combustível no tanque.", prazo: dias(3) },
-    { cliente: "Sítio Boa Vista", tipoMaquina: "Gerador", marca: "Toyama", problema: "Gerador liga mas não gera energia.", prazo: dias(-1) },
-    { cliente: "Carlos Dias", telefone: "(31) 96666-7788", tipoMaquina: "Cortador de grama", marca: "Tramontina", problema: "Lâmina desbalanceada, muita vibração.", prazo: dias(0) },
+    {
+      cliente: "João Pereira",
+      telefone: "(31) 98888-1122",
+      tipoMaquina: "Motosserra",
+      marca: "Stihl",
+      modelo: "MS 170",
+      problema: "Não pega a frio e perde força no corte.",
+      prazo: dias(2),
+    },
+    {
+      cliente: "Maria Santos",
+      telefone: "(31) 97777-4455",
+      tipoMaquina: "Roçadeira",
+      marca: "Husqvarna",
+      modelo: "143R",
+      problema: "Vazamento de combustível no tanque.",
+      prazo: dias(3),
+    },
+    {
+      cliente: "Sítio Boa Vista",
+      tipoMaquina: "Gerador",
+      marca: "Toyama",
+      problema: "Gerador liga mas não gera energia.",
+      prazo: dias(-1),
+    },
+    {
+      cliente: "Carlos Dias",
+      telefone: "(31) 96666-7788",
+      tipoMaquina: "Cortador de grama",
+      marca: "Tramontina",
+      problema: "Lâmina desbalanceada, muita vibração.",
+      prazo: dias(0),
+    },
   ];
   ex.forEach((d) => criarOrdem(d));
 }

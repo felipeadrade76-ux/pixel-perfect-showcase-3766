@@ -44,7 +44,10 @@ export async function buscar(ctx: ToolContext, ref: string): Promise<OrdemRow> {
 }
 
 export async function salvar(ctx: ToolContext, id: string, patch: Record<string, unknown>) {
-  const { error } = await db(ctx).from("ordens").update(patch as never).eq("id", id);
+  const { error } = await db(ctx)
+    .from("ordens")
+    .update(patch as never)
+    .eq("id", id);
   if (error) throw new ToolError(error.message);
 }
 

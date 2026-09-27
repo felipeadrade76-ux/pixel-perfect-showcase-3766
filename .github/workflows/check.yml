@@ -1,0 +1,22 @@
+name: OficinIA - verificacao do codigo
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [feature/oficinia-v06-financeiro]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - name: Build
+        run: bun run build
+      - name: ESLint completo dos arquivos alterados
+        run: |
+          bunx eslint src/routes/financeiro.tsx 'src/routes/ordem.$id.tsx' src/lib/oficina-store.ts
+      - name: Lint completo - zero erros e avisos
+        run: bunx eslint . --max-warnings 0
