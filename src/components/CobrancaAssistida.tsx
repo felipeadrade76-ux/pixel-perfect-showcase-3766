@@ -15,10 +15,13 @@ export function CobrancaAssistida({ ordem }: { ordem: Ordem }) {
   const [erro, setErro] = useState("");
   const [aviso, setAviso] = useState("");
   const [recarregar, setRecarregar] = useState(0);
+  const [carregandoCobrancas, setCarregandoCobrancas] = useState(true);
   const tentativa = useRef<{ id: string; valor: number; forma: Forma } | null>(null);
 
   useEffect(() => {
     let ativo = true;
+    setCobrancas([]);
+    setCarregandoCobrancas(true);
     supabase
       .from("cobrancas")
       .select("*")
@@ -26,6 +29,7 @@ export function CobrancaAssistida({ ordem }: { ordem: Ordem }) {
       .order("criada_em", { ascending: false })
       .then(({ data, error }) => {
         if (!ativo) return;
+        setCarregandoCobrancas(false);
         if (error) setErro("Não foi possível consultar as cobranças. Tente novamente.");
         else setCobrancas(data ?? []);
       });
@@ -56,11 +60,12 @@ export function CobrancaAssistida({ ordem }: { ordem: Ordem }) {
   function solicitar() {
     void executar(async () => {
       const v = Number(valor.replace(",", "."));
+      const retomada = tentativa.current?.valor === v && tentativa.current.forma === forma;
       if (
         !Number.isFinite(v) ||
         v <= 0 ||
         Math.abs(v * 100 - Math.round(v * 100)) > 1e-7 ||
-        v > disponivel
+        (!retomada && v > disponivel)
       ) {
         throw new Error(
           "Informe um valor positivo, em centavos, até o saldo ainda não solicitado.",
@@ -112,8 +117,12 @@ export function CobrancaAssistida({ ordem }: { ordem: Ordem }) {
         return;
       const { error } = await supabase.rpc("oficinia_confirmar_cobranca", { p_cobranca: id });
       if (error) throw new Error(error.message);
-      await loadOrdens();
-      setAviso("Recebimento confirmado manualmente e saldo atualizado.");
+      try {
+        await loadOrdens();
+        setAviso("Recebimento confirmado manualmente e saldo atualizado.");
+      } catch {
+        setAviso("Recebimento confirmado no banco. Não foi possível atualizar a tela; recarregue para ver o saldo.");
+      }
     });
   }
 
@@ -158,7 +167,7 @@ export function CobrancaAssistida({ ordem }: { ordem: Ordem }) {
         Saldo disponível para novas cobranças: {moeda(disponivel)}
       </p>
       <button
-        disabled={ocupado || disponivel <= 0}
+        disabled={ocupado || carregandoCobrancas || (disponivel <= 0 && !tentativa.current)}
         onClick={solicitar}
         className="mt-3 w-full rounded-xl bg-primary py-3 font-bold text-primary-foreground disabled:opacity-50"
       >
@@ -174,6 +183,8 @@ export function CobrancaAssistida({ ordem }: { ordem: Ordem }) {
           {aviso}
         </p>
       )}
+      {carregandoCobrancas && <p role="status" className="mt-3 text-sm text-muted-foreground">Consultando cobranças...</p>}
+      {!carregandoCobrancas && erro && <button type="button" onClick={() => setRecarregar((n) => n + 1)} className="mt-2 rounded-lg border border-input px-3 py-2 text-xs font-semibold">Atualizar cobranças</button>}
       <div className="mt-4 space-y-3">
         {cobrancas.map((c) => (
           <div key={c.id} className="rounded-xl border border-border p-3">
@@ -232,7 +243,7 @@ export function CobrancaAssistida({ ordem }: { ordem: Ordem }) {
             )}
           </div>
         ))}
-        {cobrancas.length === 0 && (
+        {!carregandoCobrancas && !erro && cobrancas.length === 0 && (
           <p className="text-sm text-muted-foreground">Nenhuma cobrança preparada nesta ordem.</p>
         )}
       </div>
