@@ -2,7 +2,7 @@
 set -euo pipefail
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
-psql -X -v ON_ERROR_STOP=1 -c "SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',false); INSERT INTO public.ordens (id, cliente, tipo_maquina, problema, itens) VALUES ('44444444-3333-4333-8333-333333333333','Teste simultâneo','Gerador','Falha','[{\\"id\\":\\"44444444-0000-4000-8000-000000000001\\",\\"descricao\\":\\"Serviço\\",\\"tipo\\":\\"Mão de obra\\",\\"valor\\":100}]'::jsonb);"
+psql -X -v ON_ERROR_STOP=1 -c "SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',false); INSERT INTO public.ordens (id, cliente, tipo_maquina, problema, itens) VALUES ('44444444-3333-4333-8333-333333333333','Teste simultâneo','Gerador','Falha',jsonb_build_array(jsonb_build_object('id','44444444-0000-4000-8000-000000000001','descricao','Serviço','tipo','Mão de obra','valor',100)));"
 charge() {
   local label="$1" request="$2"
   if psql -X -v ON_ERROR_STOP=1 -c "SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',false); SELECT (public.oficinia_criar_cobranca('44444444-3333-4333-8333-333333333333','$request',60,'Pix')).id;" >"$tmp/$label.log" 2>&1; then
