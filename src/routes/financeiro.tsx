@@ -21,7 +21,7 @@ function Financeiro() {
   const info = useMemo(() => {
     const pagamentos = ordens.flatMap(o => o.pagamentos.filter(p => mesDe(p.data) === mes).map(p => ({...p,ordem:o})));
     const recebido = pagamentos.reduce((a,p) => a+p.valor,0);
-    const ativos = ordens.filter(o => !emOrcamento(o.status) && o.status !== "Cancelada");
+    const ativos = ordens.filter(o => !emOrcamento(o.status));
     const aberto = ativos.reduce((a,o) => a+Math.max(0,saldo(o)),0);
     const orcamentos = ordens.filter(o => emOrcamento(o.status)).reduce((a,o) => a+Math.max(0,total(o)),0);
     const formas = ["Pix","Dinheiro","Cartão"].map(forma => ({forma,valor:pagamentos.filter(p => p.forma===forma).reduce((a,p)=>a+p.valor,0)}));
