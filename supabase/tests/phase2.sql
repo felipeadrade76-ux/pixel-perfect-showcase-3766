@@ -12,7 +12,9 @@ DECLARE n integer;
 BEGIN
  SELECT count(distinct numero) INTO n FROM public.ordens;
  IF n <> 2 THEN RAISE EXCEPTION 'OS numbers collided'; END IF;
- IF EXISTS (SELECT 1 FROM public.ordens WHERE substring(numero from '^OS-([0-9]+)
+ IF EXISTS (SELECT 1 FROM public.ordens WHERE substring(numero from 'OS-([0-9]+)')::bigint <= 42) THEN
+   RAISE EXCEPTION 'New OS number did not advance legacy data';
+ END IF;
 END $$;
 
 SELECT public.oficinia_registrar_pagamento(
