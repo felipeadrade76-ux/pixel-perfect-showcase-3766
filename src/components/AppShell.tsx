@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Home, ClipboardList, CalendarDays, Wallet, Plus, Wrench, LogOut } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
-import { loadOrdens, limparOrdens } from "@/lib/oficina-store";
+import { loadOrdens, limparOrdens, selecionarUsuario } from "@/lib/oficina-store";
 import { supabase } from "@/integrations/supabase/client";
 
 const nav = [
@@ -43,6 +43,7 @@ export function AppShell({
           return;
         }
         if (!ativo) return;
+        selecionarUsuario(data.session.user.id);
         setPronto(true);
         await loadOrdens();
       } catch (error) {
@@ -53,10 +54,13 @@ export function AppShell({
       }
     }
     void carregar();
-    const { data } = supabase.auth.onAuthStateChange((e) => {
+    const { data } = supabase.auth.onAuthStateChange((e, session) => {
       if (e === "SIGNED_OUT") {
         limparOrdens();
         irParaLogin();
+      } else if (e === "SIGNED_IN" && session && selecionarUsuario(session.user.id)) {
+        setPronto(false);
+        setTentativa((n) => n + 1);
       }
     });
     return () => {
