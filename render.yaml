@@ -4,6 +4,7 @@ services:
   - type: web
     name: oficinia-homologacao
     runtime: docker
+    branch: audit/oficinia-fases-1-3
     dockerfilePath: ./Dockerfile
     healthCheckPath: /
     envVars:

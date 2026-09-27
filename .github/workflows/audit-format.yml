@@ -1,0 +1,26 @@
+name: OficinIA - formatacao final de auditoria
+on:
+  workflow_dispatch:
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: audit/oficinia-fases-1-3
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - name: Formatar arquivos auditados
+        run: bunx prettier --write src/lib/oficina-store.ts src/routes/financeiro.tsx src/components/CobrancaAssistida.tsx tests/store.test.ts tests/browser/auth.spec.ts tests/browser/order.spec.ts playwright.config.ts
+      - name: Commit sem reescrever historico
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/lib/oficina-store.ts src/routes/financeiro.tsx src/components/CobrancaAssistida.tsx tests/store.test.ts tests/browser/auth.spec.ts tests/browser/order.spec.ts playwright.config.ts
+          if ! git diff --cached --quiet; then
+            git commit -m "style: format audit regression files"
+            git push origin HEAD:audit/oficinia-fases-1-3
+          fi

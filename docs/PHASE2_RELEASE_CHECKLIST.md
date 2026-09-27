@@ -1,7 +1,7 @@
 # OficinIA — Fase 2: validação e implantação segura
 
 **Não executar a migration diretamente na oficina em produção sem backup e homologação.**
-A migração `20260927230000_oficinia_integridade.sql` foi escrita para ser aplicada depois do schema inicial. A execução no GitHub Actions usa PostgreSQL descartável e simula duas contas autenticadas; ela **não altera o Lovable Cloud**.
+As migrações devem ser aplicadas em ordem: schema inicial, `20260927230000_oficinia_integridade.sql`, `20260927233000_cobranca_assistida.sql` e `20260928010000_auditoria_regressao.sql`. Nunca pular a última: ela protege cobranças pendentes de pagamentos manuais e alterações de itens. A execução no GitHub Actions usa PostgreSQL descartável e simula duas contas autenticadas; ela **não altera o Lovable Cloud**.
 
 ## Antes de aplicar no Supabase/Lovable Cloud
 
@@ -17,7 +17,7 @@ A migração `20260927230000_oficinia_integridade.sql` foi escrita para ser apli
    SELECT id, numero, itens, pagamentos FROM public.ordens
    WHERE jsonb_typeof(itens) <> 'array' OR jsonb_typeof(pagamentos) <> 'array';
    ```
-4. Aplique a migração em ambiente de teste e confira as permissões `authenticated`, o trigger de versão e a RPC `oficinia_registrar_pagamento`.
+4. Aplique as migrações em ambiente de teste e confira as permissões `authenticated`, o trigger de versão, a RPC `oficinia_registrar_pagamento` e as três RPCs de cobrança assistida.
 5. Confirme que o código da branch de desenvolvimento e a migração foram ativados **juntos**. Código novo sem migration falha no RPC; migration com código antigo pode impedir updates financeiros antigos, por segurança.
 
 ## Homologação funcional com dados fictícios
@@ -32,6 +32,10 @@ A migração `20260927230000_oficinia_integridade.sql` foi escrita para ser apli
 - Tentar reduzir peças/mão de obra abaixo do já pago: operação deve falhar.
 - Excluir OS sem pagamentos com confirmação: só desaparecer após resposta do banco. Excluir OS com pagamento deve ser recusado.
 - Consultar histórico, lista, agenda e financeiro após recarregar a página e após novo login.
+- Com cobrança de R$ 80 pendente numa OS de R$ 100, recusar pagamento manual de R$ 30 e redução de itens a R$ 70; aceitar R$ 20 adicional e depois confirmar os R$ 80 exatamente uma vez.
+- Confirmar que marcar «cliente informou» não altera recebido e que uma baixa com o ID de uma cobrança não deixa reserva fantasma.
+- Conferir mais de mil OS e avisos, inclusive após uma falha de rede na segunda página.
+- Reexecutar os testes de navegador do relatório `docs/AUDITORIA_FASES_1_3.md` na revisão final.
 
 ## Critérios para liberar o piloto
 

@@ -129,6 +129,7 @@ function toRow(o: Ordem) {
 
 let state: Ordem[] = [];
 let carregamentoVersao = 0;
+let sessaoVersao = 0;
 let usuarioAtivo: string | null = null;
 const listeners = new Set<() => void>();
 
@@ -140,20 +141,31 @@ export async function loadOrdens(): Promise<void> {
   if (typeof window === "undefined") return;
   const versao = ++carregamentoVersao;
   const usuarioDaConsulta = usuarioAtivo;
-  const { data, error } = await supabase
-    .from("ordens")
-    .select("*")
-    .order("criada_em", { ascending: false });
-  if (versao !== carregamentoVersao || usuarioDaConsulta !== usuarioAtivo) return; // Ignore stale account responses.
-  if (error || !data)
-    throw new Error("Falha ao carregar ordens. Confira a internet e tente novamente.");
-  state = (data as Row[]).map(fromRow);
+  const pagina = 500;
+  const todas: Row[] = [];
+  for (let inicio = 0; ; inicio += pagina) {
+    const { data, error } = await supabase
+      .from("ordens")
+      .select("*")
+      .order("criada_em", { ascending: false })
+      .order("id", { ascending: false })
+      .range(inicio, inicio + pagina - 1);
+    if (versao !== carregamentoVersao || usuarioDaConsulta !== usuarioAtivo) return;
+    if (error || !data)
+      throw new Error("Falha ao carregar ordens. Confira a internet e tente novamente.");
+    todas.push(...(data as Row[]));
+    if (data.length < pagina) break;
+  }
+  if (versao !== carregamentoVersao || usuarioDaConsulta !== usuarioAtivo) return;
+  state = todas.map(fromRow);
   emit();
 }
 
 export function limparOrdens() {
   ++carregamentoVersao;
+  ++sessaoVersao;
   usuarioAtivo = null;
+  requisicoesPagamento.clear();
   state = [];
   emit();
 }
@@ -190,6 +202,8 @@ async function update(id: string, fn: (o: Ordem) => Ordem): Promise<void> {
     throw new Error("Aguarde a alteração anterior terminar.");
   }
   alteracoesEmAndamento.add(id);
+  const usuarioDaOperacao = usuarioAtivo;
+  const versaoDaOperacao = sessaoVersao;
   try {
     const { data, error } = await supabase.from("ordens").select("*").eq("id", id).single();
     if (error || !data) throw new Error("Não foi possível consultar a ordem. Confira a conexão.");
@@ -223,6 +237,9 @@ async function update(id: string, fn: (o: Ordem) => Ordem): Promise<void> {
         "A ordem foi alterada em outro dispositivo ou a gravação falhou. Atualize a tela e confira os dados.",
       );
     }
+    if (usuarioDaOperacao !== usuarioAtivo || versaoDaOperacao !== sessaoVersao) {
+      throw new Error("A sessão mudou durante a operação. Entre novamente e confira a ordem.");
+    }
     state = state.map((o) => (o.id === id ? fromRow(salva as Row) : o));
     emit();
   } finally {
@@ -250,6 +267,8 @@ export async function criarOrdem(
   >,
   requisicaoId: string = uid(),
 ): Promise<Ordem> {
+  const usuarioDaOperacao = usuarioAtivo;
+  const versaoDaOperacao = sessaoVersao;
   const agora = new Date().toISOString();
   const nova: Ordem = {
     ...dados,
@@ -273,6 +292,11 @@ export async function criarOrdem(
   if (!salva) {
     throw new Error(
       "Não foi possível confirmar a criação. Confira a lista de OS antes de tentar novamente.",
+    );
+  }
+  if (usuarioDaOperacao !== usuarioAtivo || versaoDaOperacao !== sessaoVersao) {
+    throw new Error(
+      "A sessão mudou durante a criação. Entre novamente e confira a lista de ordens.",
     );
   }
   const confirmada = fromRow(salva as Row);
@@ -353,6 +377,8 @@ export async function registrarPagamento(
     anterior && anterior.valor === valor && anterior.forma === forma ? anterior.id : uid();
   requisicoesPagamento.set(id, { id: pagamentoId, valor, forma });
   pagamentosEmAndamento.add(id);
+  const usuarioDaOperacao = usuarioAtivo;
+  const versaoDaOperacao = sessaoVersao;
   try {
     const { data, error } = await supabase.rpc("oficinia_registrar_pagamento", {
       p_ordem: id,
@@ -361,8 +387,16 @@ export async function registrarPagamento(
       p_forma: forma,
     });
     if (error || !data) {
+      const pendente = error?.message?.includes("cobranças pendentes");
       throw new Error(
-        "Não foi possível confirmar o lançamento. Confira a OS antes de tentar novamente.",
+        pendente
+          ? "Há cobrança aguardando confirmação. Cancele-a ou confira o recebimento antes de lançar outro pagamento."
+          : "Não foi possível confirmar o lançamento. Confira a OS antes de tentar novamente.",
+      );
+    }
+    if (usuarioDaOperacao !== usuarioAtivo || versaoDaOperacao !== sessaoVersao) {
+      throw new Error(
+        "A sessão mudou durante o pagamento. Entre novamente e confira os lançamentos.",
       );
     }
     const confirmada = fromRow(data as Row);
@@ -379,10 +413,15 @@ export async function excluirOrdem(id: string): Promise<void> {
     throw new Error("Aguarde a operação anterior terminar.");
   }
   alteracoesEmAndamento.add(id);
+  const usuarioDaOperacao = usuarioAtivo;
+  const versaoDaOperacao = sessaoVersao;
   try {
     const { data, error } = await supabase.from("ordens").delete().eq("id", id).select("id");
     if (error || !data || data.length !== 1) {
       throw new Error("A exclusão não foi confirmada no banco. Tente novamente.");
+    }
+    if (usuarioDaOperacao !== usuarioAtivo || versaoDaOperacao !== sessaoVersao) {
+      throw new Error("A sessão mudou durante a exclusão. Entre novamente e confira a lista.");
     }
     state = state.filter((o) => o.id !== id);
     emit();
