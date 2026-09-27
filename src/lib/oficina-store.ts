@@ -235,11 +235,12 @@ export async function criarOrdem(
     | "observacoes"
     | "prazo"
   >,
+  requisicaoId: string = uid(),
 ): Promise<Ordem> {
   const agora = new Date().toISOString();
   const nova: Ordem = {
     ...dados,
-    id: uid(),
+    id: requisicaoId,
     numero: "",
     revisao: 0,
     status: "Recebida",
@@ -250,10 +251,16 @@ export async function criarOrdem(
   };
   const { numero: _numeroIgnorado, ...semNumero } = toRow(nova);
   const { data, error } = await supabase.from("ordens").insert(semNumero).select("*").single();
-  if (error || !data) {
-    throw new Error("A ordem não foi salva no banco. Confira a conexão e tente novamente.");
+  let salva = data;
+  if (error && error.code === "23505") {
+    // Retry with the same ID after a lost response: find the previously saved OS.
+    const repetida = await supabase.from("ordens").select("*").eq("id", requisicaoId).maybeSingle();
+    if (!repetida.error && repetida.data) salva = repetida.data;
   }
-  const confirmada = fromRow(data as Row);
+  if (!salva) {
+    throw new Error("Não foi possível confirmar a criação. Confira a lista de OS antes de tentar novamente.");
+  }
+  const confirmada = fromRow(salva as Row);
   state = [confirmada, ...state.filter((o) => o.id !== confirmada.id)];
   emit();
   return confirmada;
