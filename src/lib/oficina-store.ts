@@ -59,6 +59,7 @@ const uid = () => crypto.randomUUID();
 type Row = {
   id: string;
   numero: string;
+  revisao: number;
   cliente: string;
   telefone: string | null;
   tipo_maquina: string;
