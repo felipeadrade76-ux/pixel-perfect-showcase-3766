@@ -221,9 +221,11 @@ function subscribe(cb: () => void) {
 }
 
 const getSnapshot = () => state;
+const EMPTY: Ordem[] = [];
+const getServerSnapshot = () => EMPTY;
 
 export function useOrdens() {
-  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
 
 export function useOrdem(id: string) {
