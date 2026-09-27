@@ -18,13 +18,10 @@ export default defineTool({
   annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
   handler: async (i, ctx) => {
     const c = db(ctx);
-    const { data: nums } = await c.from("ordens").select("numero");
-    const max = Math.max(0, ...(nums ?? []).map((r) => Number(r.numero.replace(/\D/g, "")) || 0));
     const agora = new Date().toISOString();
     const { data, error } = await c
       .from("ordens")
       .insert({
-        numero: "OS-" + String(max + 1).padStart(4, "0"),
         cliente: i.cliente,
         tipo_maquina: i.tipoMaquina,
         problema: i.problema,
