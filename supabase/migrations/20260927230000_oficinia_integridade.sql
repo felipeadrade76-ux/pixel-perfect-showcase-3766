@@ -50,7 +50,11 @@ BEGIN
     WHERE id = p_ordem AND user_id = auth.uid() FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'Ordem não encontrada'; END IF;
   IF EXISTS (SELECT 1 FROM jsonb_array_elements(v_ordem.pagamentos) p WHERE p->>'id' = v_id) THEN
-    RETURN v_ordem; -- Same request retried after a network timeout: no duplicate.
+    IF NOT EXISTS (
+      SELECT 1 FROM jsonb_array_elements(v_ordem.pagamentos) p
+      WHERE p->>'id' = v_id AND (p->>'valor')::numeric = p_valor AND p->>'forma' = p_forma
+    ) THEN RAISE EXCEPTION 'Identificador já utilizado para outro pagamento'; END IF;
+    RETURN v_ordem; -- Safe retry of the exact same transaction.
   END IF;
   SELECT COALESCE(sum((i->>'valor')::numeric),0) INTO v_total
     FROM jsonb_array_elements(v_ordem.itens) i;
