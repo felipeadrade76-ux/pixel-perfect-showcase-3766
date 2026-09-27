@@ -15,6 +15,7 @@ type J = { data: string; texto: string };
 export type OrdemRow = {
   id: string;
   numero: string;
+  revisao: number;
   cliente: string;
   telefone: string | null;
   tipo_maquina: string;
@@ -43,12 +44,16 @@ export async function buscar(ctx: ToolContext, ref: string): Promise<OrdemRow> {
   return data as unknown as OrdemRow;
 }
 
-export async function salvar(ctx: ToolContext, id: string, patch: Record<string, unknown>) {
-  const { error } = await db(ctx)
+export async function salvar(ctx: ToolContext, id: string, patch: Record<string, unknown>, revisao: number) {
+  const { data, error } = await db(ctx)
     .from("ordens")
     .update(patch as never)
-    .eq("id", id);
+    .eq("id", id)
+    .eq("revisao", revisao)
+    .select("id")
+    .maybeSingle();
   if (error) throw new ToolError(error.message);
+  if (!data) throw new ToolError("A ordem foi alterada em outro dispositivo. Consulte novamente antes de salvar.");
 }
 
 const soma = (a: { valor: number }[]) => a.reduce((s, x) => s + Number(x.valor), 0);
