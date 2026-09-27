@@ -44,6 +44,8 @@ function Detalhe() {
   const [editando, setEditando] = useState(false);
   const [item, setItem] = useState({ descricao: "", tipo: "Peça", valor: "" });
   const [pgto, setPgto] = useState({ valor: "", forma: "Pix" });
+  const [salvandoPagamento, setSalvandoPagamento] = useState(false);
+  const [erroPagamento, setErroPagamento] = useState("");
 
   if (!ordem) {
     return (
@@ -223,16 +225,30 @@ function Detalhe() {
             </select>
           </div>
           <button
-            onClick={() => {
+            disabled={salvandoPagamento}
+            onClick={async () => {
               const valor = Number(pgto.valor.replace(",", "."));
-              if (!valor) return;
-              registrarPagamento(ordem.id, valor, pgto.forma as "Pix" | "Dinheiro" | "Cartão");
-              setPgto({ valor: "", forma: pgto.forma });
+              setErroPagamento("");
+              if (!Number.isFinite(valor) || valor <= 0 || Math.round(valor * 100) > Math.round(saldo(ordem) * 100)) {
+                setErroPagamento("Informe um valor positivo que não ultrapasse o saldo pendente.");
+                return;
+              }
+              setSalvandoPagamento(true);
+              try {
+                await registrarPagamento(ordem.id, valor, pgto.forma as "Pix" | "Dinheiro" | "Cartão");
+                setPgto({ valor: "", forma: pgto.forma });
+              } catch (error) {
+                setErroPagamento(error instanceof Error ? error.message : "Falha ao registrar o pagamento.");
+              } finally {
+                setSalvandoPagamento(false);
+              }
             }}
-            className="mt-2 w-full rounded-xl bg-accent py-3 font-bold text-accent-foreground"
+            className="mt-2 w-full rounded-xl bg-accent py-3 font-bold text-accent-foreground disabled:opacity-50"
           >
-            Registrar pagamento
+            {salvandoPagamento ? "Salvando..." : "Registrar pagamento"}
           </button>
+          {erroPagamento ? <p role="alert" className="mt-2 text-sm text-destructive">{erroPagamento}</p> : null}
+          <p className="mt-2 text-xs text-muted-foreground">Confirme o recebimento no banco ou maquininha antes de registrar. O Pix não tem baixa automática nesta versão.</p>
         </section>
 
         <section className={bloco}>
