@@ -47,6 +47,23 @@ function Detalhe() {
   const [pgto, setPgto] = useState({ valor: "", forma: "Pix" });
   const [salvandoPagamento, setSalvandoPagamento] = useState(false);
   const [erroPagamento, setErroPagamento] = useState("");
+  const [salvandoOrdem, setSalvandoOrdem] = useState(false);
+  const [erroOrdem, setErroOrdem] = useState("");
+
+  async function executarAlteracao(acao: () => Promise<void>): Promise<boolean> {
+    if (salvandoOrdem || salvandoPagamento) return false;
+    setSalvandoOrdem(true);
+    setErroOrdem("");
+    try {
+      await acao();
+      return true;
+    } catch (error) {
+      setErroOrdem(error instanceof Error ? error.message : "Não foi possível salvar a alteração.");
+      return false;
+    } finally {
+      setSalvandoOrdem(false);
+    }
+  }
 
   if (!ordem) {
     return (
@@ -79,7 +96,8 @@ function Detalhe() {
           <select
             className={campo}
             value={ordem.status}
-            onChange={(e) => alterarStatus(ordem.id, e.target.value as Status)}
+            disabled={salvandoOrdem || salvandoPagamento}
+            onChange={(e) => void executarAlteracao(() => alterarStatus(ordem.id, e.target.value as Status))}
           >
             {STATUSES.map((s) => (
               <option key={s} value={s}>
@@ -102,9 +120,8 @@ function Detalhe() {
           {editando ? (
             <EditarForm
               ordem={ordem}
-              onSalvar={(dados) => {
-                editarOrdem(ordem.id, dados);
-                setEditando(false);
+              onSalvar={async (dados) => {
+                if (await executarAlteracao(() => editarOrdem(ordem.id, dados))) setEditando(false);
               }}
             />
           ) : (
@@ -127,6 +144,8 @@ function Detalhe() {
           )}
         </section>
 
+        {erroOrdem ? <p role="alert" className="rounded-xl border border-destructive p-3 text-sm text-destructive">{erroOrdem}</p> : null}
+        {salvandoOrdem ? <p role="status" className="text-sm text-muted-foreground">Salvando alteração...</p> : null}
         <section className={bloco}>
           <h2 className="mb-3 font-bold">Peças e mão de obra</h2>
           <div className="space-y-2">
@@ -139,7 +158,7 @@ function Detalhe() {
                   {i.descricao} <span className="text-muted-foreground">({i.tipo})</span>
                 </span>
                 <span className="text-sm font-semibold">{moeda(i.valor)}</span>
-                <button onClick={() => removerItem(ordem.id, i.id)} aria-label="Remover item">
+                <button disabled={salvandoOrdem || salvandoPagamento} onClick={() => void executarAlteracao(() => removerItem(ordem.id, i.id))} aria-label="Remover item">
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </button>
               </div>
@@ -174,15 +193,21 @@ function Detalhe() {
               />
             </div>
             <button
-              onClick={() => {
+              disabled={salvandoOrdem || salvandoPagamento}
+              onClick={async () => {
                 const valor = Number(item.valor.replace(",", "."));
-                if (!item.descricao.trim() || !valor) return;
-                adicionarItem(ordem.id, {
-                  descricao: item.descricao.trim(),
-                  tipo: item.tipo as "Peça" | "Mão de obra",
-                  valor,
-                });
-                setItem({ descricao: "", tipo: "Peça", valor: "" });
+                if (!item.descricao.trim() || !Number.isFinite(valor) || valor < 0) {
+                  setErroOrdem("Informe uma descrição e um valor válido.");
+                  return;
+                }
+                const ok = await executarAlteracao(() =>
+                  adicionarItem(ordem.id, {
+                    descricao: item.descricao.trim(),
+                    tipo: item.tipo as "Peça" | "Mão de obra",
+                    valor,
+                  }),
+                );
+                if (ok) setItem({ descricao: "", tipo: "Peça", valor: "" });
               }}
               className="w-full rounded-xl bg-primary py-3 font-bold text-primary-foreground"
             >
@@ -238,7 +263,7 @@ function Detalhe() {
             </select>
           </div>
           <button
-            disabled={salvandoPagamento}
+            disabled={salvandoPagamento || salvandoOrdem}
             onClick={async () => {
               const valor = Number(pgto.valor.replace(",", "."));
               setErroPagamento("");
@@ -312,7 +337,7 @@ function EditarForm({
   onSalvar,
 }: {
   ordem: import("@/lib/oficina-store").Ordem;
-  onSalvar: (dados: Partial<import("@/lib/oficina-store").Ordem>) => void;
+  onSalvar: (dados: Partial<import("@/lib/oficina-store").Ordem>) => Promise<void>;
 }) {
   const [f, setF] = useState({
     cliente: ordem.cliente,
