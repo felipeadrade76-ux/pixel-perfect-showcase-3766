@@ -29,13 +29,19 @@ function Financeiro() {
   const [erroAvisos, setErroAvisos] = useState("");
   useEffect(() => {
     let ativo = true;
-    supabase.from("cobrancas").select("*").in("status", ["aguardando", "informado"])
-      .order("criada_em", { ascending: false }).then(({ data, error }) => {
+    supabase
+      .from("cobrancas")
+      .select("*")
+      .in("status", ["aguardando", "informado"])
+      .order("criada_em", { ascending: false })
+      .then(({ data, error }) => {
         if (!ativo) return;
         if (error) setErroAvisos("Não foi possível carregar os avisos de cobrança.");
         else setAvisos(data ?? []);
       });
-    return () => { ativo = false; };
+    return () => {
+      ativo = false;
+    };
   }, []);
   const info = useMemo(() => {
     const pagamentos = ordens.flatMap((o) =>
@@ -102,33 +108,65 @@ function Financeiro() {
         <section className={box}>
           <h2 className="font-bold">Cobranças e avisos de pagamento</h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            Aviso do cliente não comprova depósito. Valores só entram em “Recebido” após confirmação manual.
+            Aviso do cliente não comprova depósito. Valores só entram em “Recebido” após confirmação
+            manual.
           </p>
           <div className="mt-3 grid grid-cols-2 gap-2">
             <div className="rounded-xl bg-secondary p-3">
               <p className="text-xs text-muted-foreground">Aguardando pagamento</p>
-              <p className="mt-1 font-bold">{moeda(avisos.filter((c) => c.status === "aguardando").reduce((v,c) => v + Number(c.valor),0))}</p>
+              <p className="mt-1 font-bold">
+                {moeda(
+                  avisos
+                    .filter((c) => c.status === "aguardando")
+                    .reduce((v, c) => v + Number(c.valor), 0),
+                )}
+              </p>
             </div>
             <div className="rounded-xl bg-secondary p-3">
               <p className="text-xs text-muted-foreground">Cliente informou; conferir</p>
-              <p className="mt-1 font-bold">{moeda(avisos.filter((c) => c.status === "informado").reduce((v,c) => v + Number(c.valor),0))}</p>
+              <p className="mt-1 font-bold">
+                {moeda(
+                  avisos
+                    .filter((c) => c.status === "informado")
+                    .reduce((v, c) => v + Number(c.valor), 0),
+                )}
+              </p>
             </div>
           </div>
-          {erroAvisos && <p role="alert" className="mt-2 text-sm text-destructive">{erroAvisos}</p>}
+          {erroAvisos && (
+            <p role="alert" className="mt-2 text-sm text-destructive">
+              {erroAvisos}
+            </p>
+          )}
           <div className="mt-3 space-y-2">
             {avisos.slice(0, 20).map((c) => {
               const ordem = ordens.find((o) => o.id === c.ordem_id);
-              return <Link key={c.id} to="/ordem/$id" params={{ id: c.ordem_id }}
-                className="flex justify-between gap-3 rounded-xl border border-border p-3">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold">{ordem?.cliente ?? "Ordem de serviço"}</p>
-                  <p className="text-xs text-muted-foreground">{ordem?.numero ?? "OS"} · {c.forma} · {c.status === "informado" ? "Cliente informou" : "Aguardando"}</p>
-                </div>
-                <strong className="shrink-0 text-sm">{moeda(Number(c.valor))}</strong>
-              </Link>;
+              return (
+                <Link
+                  key={c.id}
+                  to="/ordem/$id"
+                  params={{ id: c.ordem_id }}
+                  className="flex justify-between gap-3 rounded-xl border border-border p-3"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold">
+                      {ordem?.cliente ?? "Ordem de serviço"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {ordem?.numero ?? "OS"} · {c.forma} ·{" "}
+                      {c.status === "informado" ? "Cliente informou" : "Aguardando"}
+                    </p>
+                  </div>
+                  <strong className="shrink-0 text-sm">{moeda(Number(c.valor))}</strong>
+                </Link>
+              );
             })}
-            {!avisos.length && !erroAvisos && <p className="text-sm text-muted-foreground">Nenhuma cobrança em aberto.</p>}
-            {avisos.length > 20 && <p className="text-xs text-muted-foreground">Exibindo os 20 avisos mais recentes.</p>}
+            {!avisos.length && !erroAvisos && (
+              <p className="text-sm text-muted-foreground">Nenhuma cobrança em aberto.</p>
+            )}
+            {avisos.length > 20 && (
+              <p className="text-xs text-muted-foreground">Exibindo os 20 avisos mais recentes.</p>
+            )}
           </div>
         </section>
         <section className={box}>
