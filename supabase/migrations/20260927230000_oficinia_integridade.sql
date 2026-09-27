@@ -110,3 +110,16 @@ END $$;
 DROP TRIGGER IF EXISTS oficinia_validar_saldo ON public.ordens;
 CREATE TRIGGER oficinia_validar_saldo BEFORE INSERT OR UPDATE ON public.ordens
 FOR EACH ROW EXECUTE FUNCTION public.oficinia_validar_saldo();
+
+-- Do not erase received-payment history through an ordinary OS deletion.
+CREATE OR REPLACE FUNCTION public.oficinia_bloquear_exclusao_paga()
+RETURNS trigger LANGUAGE plpgsql SET search_path = '' AS $$
+BEGIN
+  IF jsonb_array_length(OLD.pagamentos) > 0 THEN
+    RAISE EXCEPTION 'Ordens com pagamento registrado não podem ser excluídas';
+  END IF;
+  RETURN OLD;
+END $$;
+DROP TRIGGER IF EXISTS oficinia_bloquear_exclusao_paga ON public.ordens;
+CREATE TRIGGER oficinia_bloquear_exclusao_paga BEFORE DELETE ON public.ordens
+FOR EACH ROW EXECUTE FUNCTION public.oficinia_bloquear_exclusao_paga();
