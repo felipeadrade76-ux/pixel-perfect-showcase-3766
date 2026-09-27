@@ -387,8 +387,11 @@ export async function registrarPagamento(
       p_forma: forma,
     });
     if (error || !data) {
+      const pendente = error?.message?.includes("cobranças pendentes");
       throw new Error(
-        "Não foi possível confirmar o lançamento. Confira a OS antes de tentar novamente.",
+        pendente
+          ? "Há cobrança aguardando confirmação. Cancele-a ou confira o recebimento antes de lançar outro pagamento."
+          : "Não foi possível confirmar o lançamento. Confira a OS antes de tentar novamente.",
       );
     }
     if (usuarioDaOperacao !== usuarioAtivo || versaoDaOperacao !== sessaoVersao) {
