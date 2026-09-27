@@ -141,14 +141,23 @@ export async function loadOrdens(): Promise<void> {
   if (typeof window === "undefined") return;
   const versao = ++carregamentoVersao;
   const usuarioDaConsulta = usuarioAtivo;
-  const { data, error } = await supabase
-    .from("ordens")
-    .select("*")
-    .order("criada_em", { ascending: false });
-  if (versao !== carregamentoVersao || usuarioDaConsulta !== usuarioAtivo) return; // Ignore stale account responses.
-  if (error || !data)
-    throw new Error("Falha ao carregar ordens. Confira a internet e tente novamente.");
-  state = (data as Row[]).map(fromRow);
+  const pagina = 500;
+  const todas: Row[] = [];
+  for (let inicio = 0; ; inicio += pagina) {
+    const { data, error } = await supabase
+      .from("ordens")
+      .select("*")
+      .order("criada_em", { ascending: false })
+      .order("id", { ascending: false })
+      .range(inicio, inicio + pagina - 1);
+    if (versao !== carregamentoVersao || usuarioDaConsulta !== usuarioAtivo) return;
+    if (error || !data)
+      throw new Error("Falha ao carregar ordens. Confira a internet e tente novamente.");
+    todas.push(...(data as Row[]));
+    if (data.length < pagina) break;
+  }
+  if (versao !== carregamentoVersao || usuarioDaConsulta !== usuarioAtivo) return;
+  state = todas.map(fromRow);
   emit();
 }
 
