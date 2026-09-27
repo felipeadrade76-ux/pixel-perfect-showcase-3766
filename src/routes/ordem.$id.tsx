@@ -97,7 +97,9 @@ function Detalhe() {
             className={campo}
             value={ordem.status}
             disabled={salvandoOrdem || salvandoPagamento}
-            onChange={(e) => void executarAlteracao(() => alterarStatus(ordem.id, e.target.value as Status))}
+            onChange={(e) =>
+              void executarAlteracao(() => alterarStatus(ordem.id, e.target.value as Status))
+            }
           >
             {STATUSES.map((s) => (
               <option key={s} value={s}>
@@ -144,8 +146,19 @@ function Detalhe() {
           )}
         </section>
 
-        {erroOrdem ? <p role="alert" className="rounded-xl border border-destructive p-3 text-sm text-destructive">{erroOrdem}</p> : null}
-        {salvandoOrdem ? <p role="status" className="text-sm text-muted-foreground">Salvando alteração...</p> : null}
+        {erroOrdem ? (
+          <p
+            role="alert"
+            className="rounded-xl border border-destructive p-3 text-sm text-destructive"
+          >
+            {erroOrdem}
+          </p>
+        ) : null}
+        {salvandoOrdem ? (
+          <p role="status" className="text-sm text-muted-foreground">
+            Salvando alteração...
+          </p>
+        ) : null}
         <section className={bloco}>
           <h2 className="mb-3 font-bold">Peças e mão de obra</h2>
           <div className="space-y-2">
@@ -158,7 +171,11 @@ function Detalhe() {
                   {i.descricao} <span className="text-muted-foreground">({i.tipo})</span>
                 </span>
                 <span className="text-sm font-semibold">{moeda(i.valor)}</span>
-                <button disabled={salvandoOrdem || salvandoPagamento} onClick={() => void executarAlteracao(() => removerItem(ordem.id, i.id))} aria-label="Remover item">
+                <button
+                  disabled={salvandoOrdem || salvandoPagamento}
+                  onClick={() => void executarAlteracao(() => removerItem(ordem.id, i.id))}
+                  aria-label="Remover item"
+                >
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </button>
               </div>

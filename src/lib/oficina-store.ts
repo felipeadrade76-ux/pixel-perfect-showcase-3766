@@ -185,11 +185,15 @@ async function update(id: string, fn: (o: Ordem) => Ordem): Promise<void> {
     const alterada = fn(atual);
     const { id: rowId, ...resto } = toRow(alterada);
     const { data: salva, error: erroSalvar } = await supabase
-      .from("ordens").update(resto).eq("id", rowId).select("*").single();
+      .from("ordens")
+      .update(resto)
+      .eq("id", rowId)
+      .select("*")
+      .single();
     if (erroSalvar || !salva) {
       throw new Error("A alteração não foi confirmada no banco. Tente novamente.");
     }
-    state = state.map((o) => o.id === id ? fromRow(salva as Row) : o);
+    state = state.map((o) => (o.id === id ? fromRow(salva as Row) : o));
     emit();
   } finally {
     alteracoesEmAndamento.delete(id);
