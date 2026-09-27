@@ -127,31 +127,28 @@ function toRow(o: Ordem) {
 }
 
 let state: Ordem[] = [];
-let carregando = false;
+let carregamentoVersao = 0;
 const listeners = new Set<() => void>();
 
 function emit() {
   listeners.forEach((l) => l());
 }
 
-function erro(e: unknown) {
-  console.error("Falha ao salvar na nuvem", e);
-}
-
-export async function loadOrdens() {
-  if (typeof window === "undefined" || carregando) return;
-  carregando = true;
+export async function loadOrdens(): Promise<void> {
+  if (typeof window === "undefined") return;
+  const versao = ++carregamentoVersao;
   const { data, error } = await supabase
     .from("ordens")
     .select("*")
     .order("criada_em", { ascending: false });
-  carregando = false;
-  if (error) return erro(error);
+  if (versao !== carregamentoVersao) return; // Ignore a previous user's stale response.
+  if (error || !data) throw new Error("Falha ao carregar ordens. Confira a internet e tente novamente.");
   state = (data as Row[]).map(fromRow);
   emit();
 }
 
 export function limparOrdens() {
+  ++carregamentoVersao;
   state = [];
   emit();
 }
