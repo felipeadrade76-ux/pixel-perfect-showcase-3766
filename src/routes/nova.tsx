@@ -52,17 +52,20 @@ function Nova() {
     setSalvando(true);
     setErro("");
     try {
-      const nova = await criarOrdem({
-        cliente: f.cliente.trim(),
-        tipoMaquina: f.tipoMaquina.trim(),
-        problema: f.problema.trim(),
-        telefone: f.telefone.trim() || undefined,
-        marca: f.marca.trim() || undefined,
-        modelo: f.modelo.trim() || undefined,
-        serie: f.serie.trim() || undefined,
-        observacoes: f.observacoes.trim() || undefined,
-        prazo: f.prazo ? new Date(f.prazo + "T12:00:00").toISOString() : undefined,
-      }, requisicaoId);
+      const nova = await criarOrdem(
+        {
+          cliente: f.cliente.trim(),
+          tipoMaquina: f.tipoMaquina.trim(),
+          problema: f.problema.trim(),
+          telefone: f.telefone.trim() || undefined,
+          marca: f.marca.trim() || undefined,
+          modelo: f.modelo.trim() || undefined,
+          serie: f.serie.trim() || undefined,
+          observacoes: f.observacoes.trim() || undefined,
+          prazo: f.prazo ? new Date(f.prazo + "T12:00:00").toISOString() : undefined,
+        },
+        requisicaoId,
+      );
       navigate({ to: "/ordem/$id", params: { id: nova.id } });
     } catch (error) {
       setErro(error instanceof Error ? error.message : "Falha ao salvar a ordem.");

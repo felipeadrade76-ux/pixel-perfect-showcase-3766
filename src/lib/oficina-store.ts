@@ -142,7 +142,8 @@ export async function loadOrdens(): Promise<void> {
     .select("*")
     .order("criada_em", { ascending: false });
   if (versao !== carregamentoVersao) return; // Ignore a previous user's stale response.
-  if (error || !data) throw new Error("Falha ao carregar ordens. Confira a internet e tente novamente.");
+  if (error || !data)
+    throw new Error("Falha ao carregar ordens. Confira a internet e tente novamente.");
   state = (data as Row[]).map(fromRow);
   emit();
 }
@@ -258,7 +259,9 @@ export async function criarOrdem(
     if (!repetida.error && repetida.data) salva = repetida.data;
   }
   if (!salva) {
-    throw new Error("Não foi possível confirmar a criação. Confira a lista de OS antes de tentar novamente.");
+    throw new Error(
+      "Não foi possível confirmar a criação. Confira a lista de OS antes de tentar novamente.",
+    );
   }
   const confirmada = fromRow(salva as Row);
   state = [confirmada, ...state.filter((o) => o.id !== confirmada.id)];

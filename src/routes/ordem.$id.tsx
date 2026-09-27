@@ -334,7 +334,8 @@ function Detalhe() {
             disabled={salvandoOrdem || salvandoPagamento || ordem.pagamentos.length > 0}
             className="rounded-xl border border-destructive px-4 py-3 text-sm font-semibold text-destructive disabled:opacity-50"
             onClick={async () => {
-              if (!window.confirm("Excluir definitivamente esta ordem de serviço sem pagamentos?")) return;
+              if (!window.confirm("Excluir definitivamente esta ordem de serviço sem pagamentos?"))
+                return;
               if (await executarAlteracao(() => excluirOrdem(ordem.id))) {
                 navigate({ to: "/ordens" });
               }

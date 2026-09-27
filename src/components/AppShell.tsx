@@ -46,7 +46,8 @@ export function AppShell({
         setPronto(true);
         await loadOrdens();
       } catch (error) {
-        if (ativo) setErroCarga(error instanceof Error ? error.message : "Falha ao carregar ordens.");
+        if (ativo)
+          setErroCarga(error instanceof Error ? error.message : "Falha ao carregar ordens.");
       } finally {
         if (ativo) setCarregando(false);
       }
@@ -115,14 +116,24 @@ export function AppShell({
         </header>
         <main className="flex-1 p-4 pb-28 md:pb-8">
           {erroCarga ? (
-            <div role="alert" className="mb-4 rounded-xl border border-destructive p-4 text-sm text-destructive">
+            <div
+              role="alert"
+              className="mb-4 rounded-xl border border-destructive p-4 text-sm text-destructive"
+            >
               <p>{erroCarga}</p>
-              <button className="mt-3 rounded-lg border border-input px-4 py-2 font-semibold" onClick={() => setTentativa((n) => n + 1)}>
+              <button
+                className="mt-3 rounded-lg border border-input px-4 py-2 font-semibold"
+                onClick={() => setTentativa((n) => n + 1)}
+              >
                 Tentar novamente
               </button>
             </div>
           ) : null}
-          {carregando ? <p role="status" className="text-sm text-muted-foreground">Carregando ordens...</p> : null}
+          {carregando ? (
+            <p role="status" className="text-sm text-muted-foreground">
+              Carregando ordens...
+            </p>
+          ) : null}
           {pronto && !erroCarga && !carregando ? children : null}
         </main>
       </div>
