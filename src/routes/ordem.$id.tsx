@@ -266,7 +266,7 @@ function EditarForm({
   onSalvar,
 }: {
   ordem: { cliente: string; telefone?: string; marca?: string; modelo?: string; problema: string; observacoes?: string; prazo?: string };
-  onSalvar: (dados: Record<string, string | undefined>) => void;
+  onSalvar: (dados: Partial<import("@/lib/oficina-store").Ordem>) => void;
 }) {
   const [f, setF] = useState({
     cliente: ordem.cliente,

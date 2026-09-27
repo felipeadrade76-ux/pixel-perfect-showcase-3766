@@ -14,6 +14,7 @@ import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as FinanceiroRouteImport } from './routes/financeiro'
 import { Route as NovaRouteImport } from './routes/nova'
 import { Route as OrdensRouteImport } from './routes/ordens'
+import { Route as OrdemIdRouteImport } from './routes/ordem.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -40,6 +41,11 @@ const OrdensRoute = OrdensRouteImport.update({
   path: '/ordens',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OrdemIdRoute = OrdemIdRouteImport.update({
+  id: '/ordem/$id',
+  path: '/ordem/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -47,6 +53,7 @@ export interface FileRoutesByFullPath {
   '/financeiro': typeof FinanceiroRoute
   '/nova': typeof NovaRoute
   '/ordens': typeof OrdensRoute
+  '/ordem/$id': typeof OrdemIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/financeiro': typeof FinanceiroRoute
   '/nova': typeof NovaRoute
   '/ordens': typeof OrdensRoute
+  '/ordem/$id': typeof OrdemIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,13 +70,22 @@ export interface FileRoutesById {
   '/financeiro': typeof FinanceiroRoute
   '/nova': typeof NovaRoute
   '/ordens': typeof OrdensRoute
+  '/ordem/$id': typeof OrdemIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/agenda' | '/financeiro' | '/nova' | '/ordens'
+  fullPaths:
+    '/' | '/agenda' | '/financeiro' | '/nova' | '/ordens' | '/ordem/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/agenda' | '/financeiro' | '/nova' | '/ordens'
-  id: '__root__' | '/' | '/agenda' | '/financeiro' | '/nova' | '/ordens'
+  to: '/' | '/agenda' | '/financeiro' | '/nova' | '/ordens' | '/ordem/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/agenda'
+    | '/financeiro'
+    | '/nova'
+    | '/ordens'
+    | '/ordem/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -77,6 +94,7 @@ export interface RootRouteChildren {
   FinanceiroRoute: typeof FinanceiroRoute
   NovaRoute: typeof NovaRoute
   OrdensRoute: typeof OrdensRoute
+  OrdemIdRoute: typeof OrdemIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -116,6 +134,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrdensRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ordem/$id': {
+      id: '/ordem/$id'
+      path: '/ordem/$id'
+      fullPath: '/ordem/$id'
+      preLoaderRoute: typeof OrdemIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -125,6 +150,7 @@ const rootRouteChildren: RootRouteChildren = {
   FinanceiroRoute: FinanceiroRoute,
   NovaRoute: NovaRoute,
   OrdensRoute: OrdensRoute,
+  OrdemIdRoute: OrdemIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
