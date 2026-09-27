@@ -55,6 +55,7 @@ jobs:
         run: |
           psql -X -v ON_ERROR_STOP=1 -f supabase/tests/bootstrap.sql
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20260927193602_fd1d9671-18d6-440f-a56d-3b5e9af0b8db.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/tests/legacy.sql
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20260927230000_oficinia_integridade.sql
       - name: Verify numbering, permissions, RLS and payment rules
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/tests/phase2.sql
