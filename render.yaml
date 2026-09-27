@@ -1,0 +1,17 @@
+# Optional hosting blueprint for a separate test service. Import deliberately
+# through your own Render account; this file does not deploy anything by itself.
+services:
+  - type: web
+    name: oficinia-homologacao
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /
+    envVars:
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_PUBLISHABLE_KEY
+        sync: false

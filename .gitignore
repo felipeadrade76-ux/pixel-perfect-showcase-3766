@@ -15,6 +15,12 @@ dist-ssr
 .tanstack/**
 .nitro
 *.local
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+!.env.example
 
 # Wrangler / Cloudflare
 .wrangler/
@@ -30,3 +36,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Supabase CLI local state (never link this repo to a production database in CI)
+supabase/.temp/
+.supabase/

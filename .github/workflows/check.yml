@@ -3,7 +3,7 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [feature/oficinia-v06-financeiro, feature/oficinia-v07-integridade, feature/oficinia-v08-cobranca-assistida]
+    branches: [feature/oficinia-v06-financeiro, feature/oficinia-v07-integridade, feature/oficinia-v08-cobranca-assistida, feature/oficinia-v09-independente]
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -13,7 +13,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
-      - name: Build
+      - name: Build with independent environment, without Lovable Cloud variables
+        env:
+          VITE_SUPABASE_URL: https://example.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
+          SUPABASE_URL: https://example.supabase.co
+          SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
         run: bun run build
       - name: TypeScript strict typecheck
         run: bunx tsc --noEmit
@@ -22,6 +27,53 @@ jobs:
           bunx eslint src/routes/financeiro.tsx 'src/routes/ordem.$id.tsx' src/lib/oficina-store.ts
       - name: Lint completo - zero erros e avisos
         run: bunx eslint . --max-warnings 0
+      - name: Smoke test standalone Node server and SSR
+        env:
+          VITE_SUPABASE_URL: https://example.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
+          SUPABASE_URL: https://example.supabase.co
+          SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
+        run: bash scripts/smoke-runtime.sh
+      - name: Protect independent environment files
+        run: |
+          test -z "$(git ls-files .env)"
+          ! grep -R -E 'VITE_.*(SERVICE_ROLE|SECRET_KEY)' .env.example
+
+
+
+  container:
+    if: github.ref == 'refs/heads/feature/oficinia-v09-independente'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build independent production container
+        run: |
+          docker build -t oficinia-independent-ci \
+            --build-arg VITE_SUPABASE_URL=https://example.supabase.co \
+            --build-arg VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_ci_placeholder .
+      - name: Start production container with dummy configuration
+        run: |
+          docker run -d --name oficinia-independent-ci -p 127.0.0.1:4180:3000 \
+            -e SUPABASE_URL=https://example.supabase.co \
+            -e SUPABASE_PUBLISHABLE_KEY=sb_publishable_ci_placeholder \
+            oficinia-independent-ci
+          ready=0
+          for i in $(seq 1 45); do
+            if curl --silent --show-error --fail http://127.0.0.1:4180/ -o /tmp/oficinia-container-home 2>/dev/null; then
+              ready=1
+              break
+            fi
+            sleep 1
+          done
+          if [ "$ready" != 1 ]; then docker logs oficinia-independent-ci; exit 1; fi
+          grep -q 'OficinIA' /tmp/oficinia-container-home
+          curl --silent --show-error --fail http://127.0.0.1:4180/login -o /dev/null
+          echo INDEPENDENT_DOCKER_DEPLOY_SMOKE_PASSED
+      - name: Stop isolated container
+        if: always()
+        run: docker rm -f oficinia-independent-ci || true
 
   database:
     runs-on: ubuntu-latest

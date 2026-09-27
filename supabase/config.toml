@@ -1,1 +1,2 @@
-project_id = "vpykwmcspyfykoesanwt"
+# Local development identity. Remote deployment must be linked explicitly to the user-owned Supabase project.
+project_id = "oficinia-local"

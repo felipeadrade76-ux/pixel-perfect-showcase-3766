@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Wrench } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { safeNext } from "@/lib/safe-next";
 
 export const Route = createFileRoute("/login")({
@@ -60,10 +59,16 @@ function Login() {
 
   async function google() {
     sessionStorage.setItem("oficina-next", next);
-    const r = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin + "/login?next=" + encodeURIComponent(next),
+    setBusy(true);
+    setMsg(null);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin + "/login?next=" + encodeURIComponent(next),
+      },
     });
-    if (r.error) setMsg("Não foi possível entrar com Google.");
+    if (error) setMsg("Não foi possível entrar com Google.");
+    setBusy(false);
   }
 
   return (
