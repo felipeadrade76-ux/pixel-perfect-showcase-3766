@@ -295,7 +295,9 @@ export async function criarOrdem(
     );
   }
   if (usuarioDaOperacao !== usuarioAtivo || versaoDaOperacao !== sessaoVersao) {
-    throw new Error("A sessão mudou durante a criação. Entre novamente e confira a lista de ordens.");
+    throw new Error(
+      "A sessão mudou durante a criação. Entre novamente e confira a lista de ordens.",
+    );
   }
   const confirmada = fromRow(salva as Row);
   state = [confirmada, ...state.filter((o) => o.id !== confirmada.id)];
@@ -390,7 +392,9 @@ export async function registrarPagamento(
       );
     }
     if (usuarioDaOperacao !== usuarioAtivo || versaoDaOperacao !== sessaoVersao) {
-      throw new Error("A sessão mudou durante o pagamento. Entre novamente e confira os lançamentos.");
+      throw new Error(
+      "A sessão mudou durante o pagamento. Entre novamente e confira os lançamentos.",
+    );
     }
     const confirmada = fromRow(data as Row);
     state = state.map((o) => (o.id === id ? confirmada : o));
