@@ -129,6 +129,7 @@ function toRow(o: Ordem) {
 
 let state: Ordem[] = [];
 let carregamentoVersao = 0;
+let usuarioAtivo: string | null = null;
 const listeners = new Set<() => void>();
 
 function emit() {
@@ -138,11 +139,12 @@ function emit() {
 export async function loadOrdens(): Promise<void> {
   if (typeof window === "undefined") return;
   const versao = ++carregamentoVersao;
+  const usuarioDaConsulta = usuarioAtivo;
   const { data, error } = await supabase
     .from("ordens")
     .select("*")
     .order("criada_em", { ascending: false });
-  if (versao !== carregamentoVersao) return; // Ignore a previous user's stale response.
+  if (versao !== carregamentoVersao || usuarioDaConsulta !== usuarioAtivo) return; // Ignore stale account responses.
   if (error || !data)
     throw new Error("Falha ao carregar ordens. Confira a internet e tente novamente.");
   state = (data as Row[]).map(fromRow);
@@ -151,8 +153,17 @@ export async function loadOrdens(): Promise<void> {
 
 export function limparOrdens() {
   ++carregamentoVersao;
+  usuarioAtivo = null;
   state = [];
   emit();
+}
+
+/** Clears previous-account data before another authenticated account can see the UI. */
+export function selecionarUsuario(id: string): boolean {
+  if (usuarioAtivo === id) return false;
+  limparOrdens();
+  usuarioAtivo = id;
+  return true;
 }
 
 function subscribe(cb: () => void) {
