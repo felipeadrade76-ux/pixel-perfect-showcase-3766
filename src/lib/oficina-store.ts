@@ -35,6 +35,7 @@ export type Evento = {
 export type Ordem = {
   id: string;
   numero: string;
+  revisao: number;
   cliente: string;
   telefone?: string | undefined;
   tipoMaquina: string;
@@ -82,6 +83,7 @@ function fromRow(r: Row): Ordem {
   return {
     id: r.id,
     numero: r.numero,
+    revisao: r.revisao,
     cliente: r.cliente,
     telefone: u(r.telefone),
     tipoMaquina: r.tipo_maquina,
@@ -183,15 +185,31 @@ async function update(id: string, fn: (o: Ordem) => Ordem): Promise<void> {
     if (error || !data) throw new Error("Não foi possível consultar a ordem. Confira a conexão.");
     const atual = fromRow(data as Row);
     const alterada = fn(atual);
-    const { id: rowId, ...resto } = toRow(alterada);
+    // Only mutable nonfinancial fields; never overwrite payments during a concurrent edit.
     const { data: salva, error: erroSalvar } = await supabase
       .from("ordens")
-      .update(resto)
-      .eq("id", rowId)
+      .update({
+        cliente: alterada.cliente,
+        telefone: alterada.telefone ?? null,
+        tipo_maquina: alterada.tipoMaquina,
+        marca: alterada.marca ?? null,
+        modelo: alterada.modelo ?? null,
+        serie: alterada.serie ?? null,
+        problema: alterada.problema,
+        observacoes: alterada.observacoes ?? null,
+        prazo: alterada.prazo ?? null,
+        status: alterada.status,
+        concluida_em: alterada.concluidaEm ?? null,
+        entregue_em: alterada.entregueEm ?? null,
+        historico: alterada.historico,
+        itens: alterada.itens,
+      })
+      .eq("id", id)
+      .eq("revisao", atual.revisao)
       .select("*")
-      .single();
+      .maybeSingle();
     if (erroSalvar || !salva) {
-      throw new Error("A alteração não foi confirmada no banco. Tente novamente.");
+      throw new Error("A ordem foi alterada em outro dispositivo ou a gravação falhou. Atualize a tela e confira os dados.");
     }
     state = state.map((o) => (o.id === id ? fromRow(salva as Row) : o));
     emit();
@@ -223,14 +241,16 @@ export async function criarOrdem(
   const nova: Ordem = {
     ...dados,
     id: uid(),
-    numero: proximoNumero(),
+    numero: "",
+    revisao: 0,
     status: "Recebida",
     criadaEm: agora,
     historico: [{ data: agora, texto: "Ordem criada" }],
     itens: [],
     pagamentos: [],
   };
-  const { data, error } = await supabase.from("ordens").insert(toRow(nova)).select("*").single();
+  const { numero: _numeroIgnorado, ...semNumero } = toRow(nova);
+  const { data, error } = await supabase.from("ordens").insert(semNumero).select("*").single();
   if (error || !data) {
     throw new Error("A ordem não foi salva no banco. Confira a conexão e tente novamente.");
   }
@@ -285,58 +305,36 @@ export async function removerItem(id: string, itemId: string) {
 }
 
 const pagamentosEmAndamento = new Set<string>();
+const requisicoesPagamento = new Map<string, { id: string; valor: number; forma: Pagamento["forma"] }>();
 
-/** Confirma o lançamento no Supabase antes de exibir o pagamento como recebido.
- * Bloqueia cliques simultâneos neste navegador; integração bancária não está implementada.
- * Ainda requer uma operação transacional no banco para múltiplos dispositivos concorrentes.
- */
+/** The RPC locks the OS row, validates its balance in the database and deduplicates by request UUID. */
 export async function registrarPagamento(
   id: string,
   valor: number,
   forma: Pagamento["forma"],
 ): Promise<void> {
-  if (!Number.isFinite(valor) || valor <= 0 || !["Pix", "Dinheiro", "Cartão"].includes(forma)) {
-    throw new Error("Informe um valor positivo e uma forma de pagamento válida.");
+  if (!Number.isFinite(valor) || valor <= 0 || Math.round(valor * 100) !== valor * 100 ||
+      !["Pix", "Dinheiro", "Cartão"].includes(forma)) {
+    throw new Error("Informe um valor positivo com até duas casas decimais e uma forma válida.");
   }
   if (pagamentosEmAndamento.has(id) || alteracoesEmAndamento.has(id)) {
-    throw new Error("Aguarde o lançamento anterior terminar.");
+    throw new Error("Aguarde a operação anterior terminar.");
   }
+  const anterior = requisicoesPagamento.get(id);
+  const pagamentoId = anterior && anterior.valor === valor && anterior.forma === forma ? anterior.id : uid();
+  requisicoesPagamento.set(id, { id: pagamentoId, valor, forma });
   pagamentosEmAndamento.add(id);
   try {
-    const { data, error } = await supabase.from("ordens").select("*").eq("id", id).single();
-    if (error || !data)
-      throw new Error("Não foi possível consultar o saldo atualizado. Tente novamente.");
-    const atual = fromRow(data as Row);
-    const pendente = saldo(atual);
-    const arredondado = Math.round(valor * 100) / 100;
-    if (arredondado <= 0 || arredondado > Math.round(pendente * 100) / 100) {
-      throw new Error("O valor informado ultrapassa o saldo disponível ou é inválido.");
+    const { data, error } = await supabase.rpc("oficinia_registrar_pagamento", {
+      p_ordem: id, p_pagamento_id: pagamentoId, p_valor: valor, p_forma: forma,
+    });
+    if (error || !data) {
+      throw new Error("Não foi possível confirmar o lançamento. Confira a OS antes de tentar novamente.");
     }
-    const agora = new Date().toISOString();
-    const alterada: Ordem = {
-      ...atual,
-      pagamentos: [...atual.pagamentos, { id: uid(), valor: arredondado, forma, data: agora }],
-      historico: [
-        ...atual.historico,
-        {
-          data: agora,
-          texto: `Pagamento de ${moeda(arredondado)} registrado manualmente via ${forma}`,
-        },
-      ],
-    };
-    const { id: rowId, ...resto } = toRow(alterada);
-    const { data: salva, error: erroSalvar } = await supabase
-      .from("ordens")
-      .update(resto)
-      .eq("id", rowId)
-      .select("*")
-      .single();
-    if (erroSalvar || !salva)
-      throw new Error(
-        "O pagamento não foi confirmado no banco. Confira a conexão e tente novamente.",
-      );
-    state = state.map((o) => (o.id === id ? fromRow(salva as Row) : o));
+    const confirmada = fromRow(data as Row);
+    state = state.map((o) => o.id === id ? confirmada : o);
     emit();
+    requisicoesPagamento.delete(id);
   } finally {
     pagamentosEmAndamento.delete(id);
   }
