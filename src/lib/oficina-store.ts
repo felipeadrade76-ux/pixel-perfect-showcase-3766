@@ -129,6 +129,7 @@ function toRow(o: Ordem) {
 
 let state: Ordem[] = [];
 let carregamentoVersao = 0;
+let sessaoVersao = 0;
 let usuarioAtivo: string | null = null;
 const listeners = new Set<() => void>();
 
@@ -153,6 +154,7 @@ export async function loadOrdens(): Promise<void> {
 
 export function limparOrdens() {
   ++carregamentoVersao;
+  ++sessaoVersao;
   usuarioAtivo = null;
   requisicoesPagamento.clear();
   state = [];
@@ -192,7 +194,7 @@ async function update(id: string, fn: (o: Ordem) => Ordem): Promise<void> {
   }
   alteracoesEmAndamento.add(id);
   const usuarioDaOperacao = usuarioAtivo;
-  const versaoDaOperacao = carregamentoVersao;
+  const versaoDaOperacao = sessaoVersao;
   try {
     const { data, error } = await supabase.from("ordens").select("*").eq("id", id).single();
     if (error || !data) throw new Error("Não foi possível consultar a ordem. Confira a conexão.");
@@ -226,7 +228,7 @@ async function update(id: string, fn: (o: Ordem) => Ordem): Promise<void> {
         "A ordem foi alterada em outro dispositivo ou a gravação falhou. Atualize a tela e confira os dados.",
       );
     }
-    if (usuarioDaOperacao !== usuarioAtivo || versaoDaOperacao !== carregamentoVersao) {
+    if (usuarioDaOperacao !== usuarioAtivo || versaoDaOperacao !== sessaoVersao) {
       throw new Error("A sessão mudou durante a operação. Entre novamente e confira a ordem.");
     }
     state = state.map((o) => (o.id === id ? fromRow(salva as Row) : o));
@@ -257,7 +259,7 @@ export async function criarOrdem(
   requisicaoId: string = uid(),
 ): Promise<Ordem> {
   const usuarioDaOperacao = usuarioAtivo;
-  const versaoDaOperacao = carregamentoVersao;
+  const versaoDaOperacao = sessaoVersao;
   const agora = new Date().toISOString();
   const nova: Ordem = {
     ...dados,
@@ -283,7 +285,7 @@ export async function criarOrdem(
       "Não foi possível confirmar a criação. Confira a lista de OS antes de tentar novamente.",
     );
   }
-  if (usuarioDaOperacao !== usuarioAtivo || versaoDaOperacao !== carregamentoVersao) {
+  if (usuarioDaOperacao !== usuarioAtivo || versaoDaOperacao !== sessaoVersao) {
     throw new Error("A sessão mudou durante a criação. Entre novamente e confira a lista de ordens.");
   }
   const confirmada = fromRow(salva as Row);
@@ -365,7 +367,7 @@ export async function registrarPagamento(
   requisicoesPagamento.set(id, { id: pagamentoId, valor, forma });
   pagamentosEmAndamento.add(id);
   const usuarioDaOperacao = usuarioAtivo;
-  const versaoDaOperacao = carregamentoVersao;
+  const versaoDaOperacao = sessaoVersao;
   try {
     const { data, error } = await supabase.rpc("oficinia_registrar_pagamento", {
       p_ordem: id,
@@ -378,7 +380,7 @@ export async function registrarPagamento(
         "Não foi possível confirmar o lançamento. Confira a OS antes de tentar novamente.",
       );
     }
-    if (usuarioDaOperacao !== usuarioAtivo || versaoDaOperacao !== carregamentoVersao) {
+    if (usuarioDaOperacao !== usuarioAtivo || versaoDaOperacao !== sessaoVersao) {
       throw new Error("A sessão mudou durante o pagamento. Entre novamente e confira os lançamentos.");
     }
     const confirmada = fromRow(data as Row);
@@ -396,13 +398,13 @@ export async function excluirOrdem(id: string): Promise<void> {
   }
   alteracoesEmAndamento.add(id);
   const usuarioDaOperacao = usuarioAtivo;
-  const versaoDaOperacao = carregamentoVersao;
+  const versaoDaOperacao = sessaoVersao;
   try {
     const { data, error } = await supabase.from("ordens").delete().eq("id", id).select("id");
     if (error || !data || data.length !== 1) {
       throw new Error("A exclusão não foi confirmada no banco. Tente novamente.");
     }
-    if (usuarioDaOperacao !== usuarioAtivo || versaoDaOperacao !== carregamentoVersao) {
+    if (usuarioDaOperacao !== usuarioAtivo || versaoDaOperacao !== sessaoVersao) {
       throw new Error("A sessão mudou durante a exclusão. Entre novamente e confira a lista.");
     }
     state = state.filter((o) => o.id !== id);
