@@ -29,18 +29,30 @@ function Financeiro() {
   const [erroAvisos, setErroAvisos] = useState("");
   useEffect(() => {
     let ativo = true;
+    let versao = 0;
     async function consultar() {
-      const { data, error } = await supabase
-        .from("cobrancas")
-        .select("*")
-        .in("status", ["aguardando", "informado"])
-        .order("criada_em", { ascending: false });
-      if (!ativo) return;
-      if (error) setErroAvisos("Não foi possível carregar os avisos de cobrança.");
-      else {
-        setErroAvisos("");
-        setAvisos(data ?? []);
+      const atual = ++versao;
+      const pagina = 500;
+      const todas: Cobranca[] = [];
+      for (let inicio = 0; ; inicio += pagina) {
+        const { data, error } = await supabase
+          .from("cobrancas")
+          .select("*")
+          .in("status", ["aguardando", "informado"])
+          .order("criada_em", { ascending: false })
+          .order("id", { ascending: false })
+          .range(inicio, inicio + pagina - 1);
+        if (!ativo || atual !== versao) return;
+        if (error || !data) {
+          setErroAvisos("Não foi possível carregar os avisos de cobrança.");
+          return;
+        }
+        todas.push(...data);
+        if (data.length < pagina) break;
       }
+      if (!ativo || atual !== versao) return;
+      setErroAvisos("");
+      setAvisos(todas);
     }
     void consultar();
     const aoFocar = () => void consultar();
