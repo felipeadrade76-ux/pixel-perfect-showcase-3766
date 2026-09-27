@@ -17,7 +17,7 @@ SELECT public.oficinia_criar_cobranca('11111111-1111-4111-8111-111111111111',
 -- The same request ID is safe to retry after a lost response.
 SELECT public.oficinia_criar_cobranca('11111111-1111-4111-8111-111111111111',
  'aaaaaaaa-0000-4000-8000-000000000001',30,'Pix');
-DO $
+DO $$
 DECLARE n integer; blocked boolean := false;
 BEGIN
  SELECT count(*) INTO n FROM public.cobrancas WHERE ordem_id='11111111-1111-4111-8111-111111111111';
@@ -35,7 +35,7 @@ BEGIN
  EXCEPTION WHEN raise_exception THEN blocked := true;
  END;
  IF NOT blocked THEN RAISE EXCEPTION 'Conflicting charge retry accepted'; END IF;
-END $;
+END $$;
 SELECT public.oficinia_marcar_cobranca('aaaaaaaa-0000-4000-8000-000000000001','informado');
 -- Client notice does not change received balance.
 DO $$
