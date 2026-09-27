@@ -1,0 +1,256 @@
+{
+  "version": 1,
+  "sdk_version": "3.0.4",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://vpykwmcspyfykoesanwt.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "pixel-perfect-pixels",
+      "version": "0.1.0",
+      "title": "Pixel Perfect Pixels"
+    },
+    "tools": [
+      {
+        "name": "listar_ordens",
+        "title": "Listar ordens de serviço",
+        "description": "Lista as ordens de serviço da oficina, com filtro opcional por status ou texto.",
+        "annotations": {
+          "readOnlyHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": [
+                "Recebida",
+                "Em diagnóstico",
+                "Aguardando aprovação",
+                "Aguardando peças",
+                "Em manutenção",
+                "Pronta",
+                "Entregue"
+              ],
+              "description": "Filtrar por status."
+            },
+            "busca": {
+              "type": "string",
+              "description": "Texto para buscar em cliente, número ou máquina."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "ver_ordem",
+        "title": "Ver ordem de serviço",
+        "description": "Mostra os detalhes de uma ordem: itens, pagamentos, saldo e histórico.",
+        "annotations": {
+          "readOnlyHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "ordem": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Número (ex.: OS-0003) ou id da ordem."
+            }
+          },
+          "required": [
+            "ordem"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "criar_ordem",
+        "title": "Criar ordem de serviço",
+        "description": "Registra a entrada de uma nova máquina na oficina com número de OS automático.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "cliente": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Nome do cliente."
+            },
+            "tipoMaquina": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Ex.: Motosserra, Roçadeira, Gerador."
+            },
+            "problema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Problema relatado."
+            },
+            "telefone": {
+              "type": "string"
+            },
+            "marca": {
+              "type": "string"
+            },
+            "modelo": {
+              "type": "string"
+            },
+            "prazo": {
+              "type": "string",
+              "description": "Previsão de conclusão (data ISO)."
+            }
+          },
+          "required": [
+            "cliente",
+            "tipoMaquina",
+            "problema"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "alterar_status",
+        "title": "Alterar status da ordem",
+        "description": "Muda o status de uma ordem e registra a alteração no histórico.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "ordem": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Número (ex.: OS-0003) ou id da ordem."
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "Recebida",
+                "Em diagnóstico",
+                "Aguardando aprovação",
+                "Aguardando peças",
+                "Em manutenção",
+                "Pronta",
+                "Entregue"
+              ]
+            }
+          },
+          "required": [
+            "ordem",
+            "status"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "adicionar_item",
+        "title": "Adicionar peça ou mão de obra",
+        "description": "Adiciona uma peça ou serviço de mão de obra (com valor em reais) a uma ordem.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "ordem": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Número (ex.: OS-0003) ou id da ordem."
+            },
+            "descricao": {
+              "type": "string",
+              "minLength": 1
+            },
+            "tipo": {
+              "type": "string",
+              "enum": [
+                "Peça",
+                "Mão de obra"
+              ]
+            },
+            "valor": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Valor em reais."
+            }
+          },
+          "required": [
+            "ordem",
+            "descricao",
+            "tipo",
+            "valor"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "registrar_pagamento",
+        "title": "Registrar pagamento",
+        "description": "Registra um pagamento recebido (Pix, Dinheiro ou Cartão) em uma ordem.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "ordem": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Número (ex.: OS-0003) ou id da ordem."
+            },
+            "valor": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "description": "Valor em reais."
+            },
+            "forma": {
+              "type": "string",
+              "enum": [
+                "Pix",
+                "Dinheiro",
+                "Cartão"
+              ]
+            }
+          },
+          "required": [
+            "ordem",
+            "valor",
+            "forma"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}

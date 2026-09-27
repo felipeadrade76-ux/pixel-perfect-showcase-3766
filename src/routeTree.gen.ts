@@ -12,9 +12,13 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AgendaRouteImport } from './routes/agenda'
 import { Route as FinanceiroRouteImport } from './routes/financeiro'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as NovaRouteImport } from './routes/nova'
 import { Route as OrdensRouteImport } from './routes/ordens'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as OrdemIdRouteImport } from './routes/ordem.$id'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -31,6 +35,16 @@ const FinanceiroRoute = FinanceiroRouteImport.update({
   path: '/financeiro',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NovaRoute = NovaRouteImport.update({
   id: '/nova',
   path: '/nova',
@@ -41,9 +55,20 @@ const OrdensRoute = OrdensRouteImport.update({
   path: '/ordens',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const OrdemIdRoute = OrdemIdRouteImport.update({
   id: '/ordem/$id',
   path: '/ordem/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -51,50 +76,89 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/agenda': typeof AgendaRoute
   '/financeiro': typeof FinanceiroRoute
+  '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/nova': typeof NovaRoute
   '/ordens': typeof OrdensRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/ordem/$id': typeof OrdemIdRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/agenda': typeof AgendaRoute
   '/financeiro': typeof FinanceiroRoute
+  '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/nova': typeof NovaRoute
   '/ordens': typeof OrdensRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/ordem/$id': typeof OrdemIdRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/agenda': typeof AgendaRoute
   '/financeiro': typeof FinanceiroRoute
+  '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/nova': typeof NovaRoute
   '/ordens': typeof OrdensRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/ordem/$id': typeof OrdemIdRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/agenda' | '/financeiro' | '/nova' | '/ordens' | '/ordem/$id'
+    | '/'
+    | '/agenda'
+    | '/financeiro'
+    | '/login'
+    | '/mcp'
+    | '/nova'
+    | '/ordens'
+    | '/.well-known/oauth-protected-resource'
+    | '/ordem/$id'
+    | '/.lovable/oauth/consent'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/agenda' | '/financeiro' | '/nova' | '/ordens' | '/ordem/$id'
+  to:
+    | '/'
+    | '/agenda'
+    | '/financeiro'
+    | '/login'
+    | '/mcp'
+    | '/nova'
+    | '/ordens'
+    | '/.well-known/oauth-protected-resource'
+    | '/ordem/$id'
+    | '/.lovable/oauth/consent'
   id:
     | '__root__'
     | '/'
     | '/agenda'
     | '/financeiro'
+    | '/login'
+    | '/mcp'
     | '/nova'
     | '/ordens'
+    | '/.well-known/oauth-protected-resource'
     | '/ordem/$id'
+    | '/.lovable/oauth/consent'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AgendaRoute: typeof AgendaRoute
   FinanceiroRoute: typeof FinanceiroRoute
+  LoginRoute: typeof LoginRoute
+  McpRoute: typeof McpRoute
   NovaRoute: typeof NovaRoute
   OrdensRoute: typeof OrdensRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   OrdemIdRoute: typeof OrdemIdRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -120,6 +184,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FinanceiroRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/nova': {
       id: '/nova'
       path: '/nova'
@@ -134,11 +212,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrdensRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ordem/$id': {
       id: '/ordem/$id'
       path: '/ordem/$id'
       fullPath: '/ordem/$id'
       preLoaderRoute: typeof OrdemIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -148,9 +240,14 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AgendaRoute: AgendaRoute,
   FinanceiroRoute: FinanceiroRoute,
+  LoginRoute: LoginRoute,
+  McpRoute: McpRoute,
   NovaRoute: NovaRoute,
   OrdensRoute: OrdensRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   OrdemIdRoute: OrdemIdRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
