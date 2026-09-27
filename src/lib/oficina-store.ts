@@ -192,7 +192,7 @@ export function proximoNumero() {
   return "OS-" + String(Math.max(0, ...nums) + 1).padStart(4, "0");
 }
 
-export function criarOrdem(
+export async function criarOrdem(
   dados: Pick<
     Ordem,
     | "cliente"
@@ -205,7 +205,7 @@ export function criarOrdem(
     | "observacoes"
     | "prazo"
   >,
-): Ordem {
+): Promise<Ordem> {
   const agora = new Date().toISOString();
   const nova: Ordem = {
     ...dados,
@@ -217,13 +217,14 @@ export function criarOrdem(
     itens: [],
     pagamentos: [],
   };
-  state = [nova, ...state];
+  const { data, error } = await supabase.from("ordens").insert(toRow(nova)).select("*").single();
+  if (error || !data) {
+    throw new Error("A ordem não foi salva no banco. Confira a conexão e tente novamente.");
+  }
+  const confirmada = fromRow(data as Row);
+  state = [confirmada, ...state.filter((o) => o.id !== confirmada.id)];
   emit();
-  supabase
-    .from("ordens")
-    .insert(toRow(nova))
-    .then(({ error }) => error && erro(error));
-  return nova;
+  return confirmada;
 }
 
 export function alterarStatus(id: string, status: Status) {
@@ -381,7 +382,10 @@ export function carregarExemplos() {
       prazo: dias(0),
     },
   ];
-  ex.forEach((d) => criarOrdem(d));
+  void Promise.allSettled(ex.map((d) => criarOrdem(d))).then((resultados) => {
+    const falhas = resultados.filter((r) => r.status === "rejected");
+    if (falhas.length) console.error("Falha ao criar ordens de exemplo", falhas);
+  });
 }
 
 export const total = (o: Ordem) => o.itens.reduce((s, i) => s + i.valor, 0);
