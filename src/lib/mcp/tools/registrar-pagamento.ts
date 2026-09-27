@@ -10,7 +10,10 @@ export default defineTool({
     ordem: z.string().min(1).describe("Número da ordem ou UUID."),
     valor: z.number().positive().describe("Valor em reais, até duas casas decimais."),
     forma: z.enum(["Pix", "Dinheiro", "Cartão"]),
-    requisicaoId: z.string().uuid().describe("Identificador único do lançamento para repetição segura."),
+    requisicaoId: z
+      .string()
+      .uuid()
+      .describe("Identificador único do lançamento para repetição segura."),
   },
   annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
   handler: async ({ ordem, valor, forma, requisicaoId }, ctx) => {

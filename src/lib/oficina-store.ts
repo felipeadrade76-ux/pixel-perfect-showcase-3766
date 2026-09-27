@@ -209,7 +209,9 @@ async function update(id: string, fn: (o: Ordem) => Ordem): Promise<void> {
       .select("*")
       .maybeSingle();
     if (erroSalvar || !salva) {
-      throw new Error("A ordem foi alterada em outro dispositivo ou a gravação falhou. Atualize a tela e confira os dados.");
+      throw new Error(
+        "A ordem foi alterada em outro dispositivo ou a gravação falhou. Atualize a tela e confira os dados.",
+      );
     }
     state = state.map((o) => (o.id === id ? fromRow(salva as Row) : o));
     emit();
@@ -305,7 +307,10 @@ export async function removerItem(id: string, itemId: string) {
 }
 
 const pagamentosEmAndamento = new Set<string>();
-const requisicoesPagamento = new Map<string, { id: string; valor: number; forma: Pagamento["forma"] }>();
+const requisicoesPagamento = new Map<
+  string,
+  { id: string; valor: number; forma: Pagamento["forma"] }
+>();
 
 /** The RPC locks the OS row, validates its balance in the database and deduplicates by request UUID. */
 export async function registrarPagamento(
@@ -313,26 +318,36 @@ export async function registrarPagamento(
   valor: number,
   forma: Pagamento["forma"],
 ): Promise<void> {
-  if (!Number.isFinite(valor) || valor <= 0 || Math.abs(valor * 100 - Math.round(valor * 100)) > 1e-7 ||
-      !["Pix", "Dinheiro", "Cartão"].includes(forma)) {
+  if (
+    !Number.isFinite(valor) ||
+    valor <= 0 ||
+    Math.abs(valor * 100 - Math.round(valor * 100)) > 1e-7 ||
+    !["Pix", "Dinheiro", "Cartão"].includes(forma)
+  ) {
     throw new Error("Informe um valor positivo com até duas casas decimais e uma forma válida.");
   }
   if (pagamentosEmAndamento.has(id) || alteracoesEmAndamento.has(id)) {
     throw new Error("Aguarde a operação anterior terminar.");
   }
   const anterior = requisicoesPagamento.get(id);
-  const pagamentoId = anterior && anterior.valor === valor && anterior.forma === forma ? anterior.id : uid();
+  const pagamentoId =
+    anterior && anterior.valor === valor && anterior.forma === forma ? anterior.id : uid();
   requisicoesPagamento.set(id, { id: pagamentoId, valor, forma });
   pagamentosEmAndamento.add(id);
   try {
     const { data, error } = await supabase.rpc("oficinia_registrar_pagamento", {
-      p_ordem: id, p_pagamento_id: pagamentoId, p_valor: valor, p_forma: forma,
+      p_ordem: id,
+      p_pagamento_id: pagamentoId,
+      p_valor: valor,
+      p_forma: forma,
     });
     if (error || !data) {
-      throw new Error("Não foi possível confirmar o lançamento. Confira a OS antes de tentar novamente.");
+      throw new Error(
+        "Não foi possível confirmar o lançamento. Confira a OS antes de tentar novamente.",
+      );
     }
     const confirmada = fromRow(data as Row);
-    state = state.map((o) => o.id === id ? confirmada : o);
+    state = state.map((o) => (o.id === id ? confirmada : o));
     emit();
     requisicoesPagamento.delete(id);
   } finally {
