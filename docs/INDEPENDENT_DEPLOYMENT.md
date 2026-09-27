@@ -1,34 +1,68 @@
-# OficinIA — execução independente e opção de retorno ao Lovable
+# OficinIA — infraestrutura independente (Fase 3)
 
-## Decisão de arquitetura
+## Escopo e resultado
 
-O repositório GitHub é a fonte do código. As fases novas ficam em branches e PRs encadeadas, sem mexer em `main` ou no site publicado enquanto não houver homologação. Voltar ao Lovable é uma escolha futura: o código anterior e o projeto original permanecem disponíveis. **Não executar migrações de um ambiente no outro sem conferir e fazer backup.**
+Código no GitHub, build e servidor TanStack Start + Nitro/Node, Dockerfile e migrações SQL reproduzíveis. A hospedagem não exige créditos, editor ou execução do Lovable. O login por e-mail/Google usa Supabase Auth; o login Google depende de configuração do provedor **no Supabase escolhido**. O antigo pacote de build e o SDK de login do Lovable saíram desta branch. O protocolo MCP ainda utiliza a biblioteca `@lovable.dev/mcp-js` como dependência npm, mas seu endpoint está mantido no próprio repositório; ativar um servidor OAuth compatível no Supabase pode exigir configuração adicional.
 
-A aplicação existente é TanStack Start (SSR) + React, não um site HTML estático. Ela precisa de hospedagem compatível com o servidor e de Supabase para login, OS, pagamentos manuais e cobranças assistidas. O pacote de build `@lovable.dev/vite-tanstack-config` e as rotas MCP ainda são dependências de código provenientes do Lovable; **independência de créditos/editor não equivale a remoção de toda dependência do SDK**. Migrar esse build para uma configuração neutra é trabalho de validação separado.
+**Fase 3 (código de infraestrutura): pronta para a Fase 4 de layout.** O projeto Supabase remoto, hospedagem/domínio e homologação com contas reais são ações de implantação, a executar na Fase 6 com os respectivos acessos e consentimento. Não há deploy, merge na `main` nem migração no banco publicado.
 
-## Ambiente próprio (sem conta bancária)
+## Desenvolvimento sem conta bancária ou Lovable
 
-1. Crie um projeto Supabase controlado pela oficina ou configure um banco de teste já existente. Antes de mover dados, confira backup, titulares e permissões. Não usar a instância publicada do Lovable como ambiente de teste.
-2. Copie `.env.example` para `.env.local` e preencha somente com a URL e a chave **publishable** do seu projeto. Não envie valores no chat nem faça commit. `SUPABASE_SERVICE_ROLE_KEY` fica **apenas em um runtime de servidor confiável**, se necessário; nunca em `VITE_*`.
-3. Execute as migrações na ordem dos arquivos em `supabase/migrations/` em banco novo. Para banco com dados, rode `supabase/tests/deployment-preflight.sql` e resolva divergências primeiro. Migrações não são aplicadas automaticamente por GitHub Actions.
-4. Ajuste Auth → URL Configuration para a origem de teste e o URL de produção depois de escolher a hospedagem. Para Google, configure o provedor no **Supabase Auth** e a URL de callback aprovada; o botão de Google usa agora `supabase.auth.signInWithOAuth`, sem SDK de login Lovable. O login por e-mail e senha não exige o Google.
-5. Execute `bun install --frozen-lockfile`, `bun run build`, `bunx tsc --noEmit` e `bunx eslint . --max-warnings 0`. O GitHub CI também sobe PostgreSQL descartável para testar transações e RLS.
-6. Escolha e configure uma hospedagem para o **servidor** TanStack Start, não uma hospedagem apenas de arquivos estáticos. Configure as variáveis no painel de segredos dessa hospedagem; associe um domínio/URL de teste primeiro.
-7. Faça smoke test em celular e desktop com **duas contas fictícias**: login, OS nova, itens, pagamento, cobrança assistida, aviso informado, confirmação, atualização do dashboard, sessão, rede interrompida e concorrência.
-8. Só depois decida aprovar PRs, migrar dados, apontar domínio e publicar. A versão Lovable original fica preservada até a troca deliberada.
+Pré-requisitos: Node.js 20+, Bun e Docker para iniciar Supabase local (instruções oficiais: https://supabase.com/docs/guides/local-development/cli/getting-started).
 
-### A cobrança assistida não é um banco digital
+```sh
+git checkout feature/oficinia-v09-independente
+bun install --frozen-lockfile
+npx supabase start
+npx supabase status
+cp .env.example .env.local
+```
 
-Não se conecta a banco/conta/chave Pix e não consulta extrato. `aguardando` e `informado` não contam como dinheiro recebido. O responsável confere o dinheiro fora da OficinIA e então confirma manualmente; a operação de baixa no banco de dados da aplicação é transacional e idempotente.
+O `supabase/` já existe; **não execute `supabase init` por cima dele**. Preencha `.env.local` com a URL local da API e a chave publishable/anon informadas pelo `supabase status`. Em ambiente local use a URL que o navegador consegue alcançar. Nunca armazene tokens de administração no repositório nem configure `SUPABASE_SERVICE_ROLE_KEY` com prefixo `VITE_`. O `supabase/config.toml` desta branch usa o identificador local `oficinia-local`, não o ref do projeto Lovable original.
 
-## Plano de fases
+```sh
+bun run dev
+bun run build
+bunx tsc --noEmit
+bunx eslint . --max-warnings 0
+```
 
-| Etapa | Escopo | Critério de pronto |
-| --- | --- | --- |
-| Fases 1–2 | Ordens, financeiro manual, integridade e cobranças assistidas | Código e testes de DB/CI verdes; homologação de UI ainda necessária |
-| Infra independente (fase atual) | Retirar dependência do login Lovable, template de ambiente, CI e implantação separada | Build sem variáveis do Lovable, banco próprio e teste remoto |
-| Experiência mobile | Navegação, acessibilidade, mensagens, formulários e testes em telas pequenas | Testes de UI e uso real por operadores |
-| Operação da oficina | Busca, filtros, dados de cliente/máquina, relatórios, impressão, exportação e recuperação | Requisitos confirmados com usuário e testes automatizados |
-| Piloto | Backup, contas, privacidade, domínio, observabilidade, correções | Homologação com dados fictícios e aceite antes de dados reais |
+Se alterar migrations locais, use `npx supabase db reset` **somente no banco LOCAL descartável**. Nunca use `--linked` para tentar limpar dados reais. O CI testa as regras de transação, RLS, pagamentos e cobranças com PostgreSQL separado, sem tocar em Supabase externo.
 
-**Status atual:** infraestrutura independente em desenvolvimento. Não anunciar aplicativo finalizado ou publicado até verificar cada critério. O retorno ao Lovable continua opcional; não pressupor sincronização automática de branches ou bancos.
+## Servidor independente e imagem de produção
+
+`vite.config.ts` usa os plugins públicos do TanStack Start, React, Tailwind e Nitro, com preset Node. `bun run build` gera `.output/` e `bun run start` executa `.output/server/index.mjs`. O workflow executa smoke tests de SSR na porta local, incluindo abertura de `/` e `/login`, usando **chaves fictícias**.
+
+Também existe `Dockerfile` multi-stage com usuário sem privilégios e `.dockerignore` que exclui arquivos de ambiente. Exemplo de execução local com dados do seu projeto (não use credenciais reais diretamente na linha de comando compartilhada):
+
+```sh
+docker build -t oficinia-test \
+  --build-arg VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co \
+  --build-arg VITE_SUPABASE_PUBLISHABLE_KEY=YOUR_PUBLIC_KEY .
+docker run --rm -p 3000:3000 \
+  --env-file .env.local oficinia-test
+```
+
+As variáveis `VITE_*` são **públicas e incorporadas no build**. Mesmo sendo publishable, só as forneça nos painéis privados da plataforma. Nunca passe senhas, tokens privados, chave service-role ou `sb_secret_*` como argumentos de build. Configure `SUPABASE_URL` e `SUPABASE_PUBLISHABLE_KEY` no ambiente do servidor.
+
+`render.yaml` é um blueprint **opcional** para criar um serviço de teste com Docker; não instala nem publica nada sozinho. A plataforma lê as variáveis solicitadas do painel quando o proprietário importa o repositório. Escolha o branch de homologação, revise o plano/custo e só então confirme a criação. Como o app possui SSR e rota MCP, não basta hospedar os arquivos HTML numa hospedagem estática. Mais informações sobre hospedagem: https://tanstack.com/start/latest/docs/framework/react/guide/hosting.
+
+## Banco próprio remoto — reservado para implantação
+
+1. Criar um Supabase sob controle da oficina, separado do banco publicado do Lovable.
+2. Fazer backup e rodar `supabase/tests/deployment-preflight.sql` no ambiente de destino para conferir esquema, duplicações e formato de JSON.
+3. Aplicar as migrations em ordem, em banco NOVO ou validado. Conferir funções, grants e RLS; nenhuma migration é aplicada pelo CI ao banco real.
+4. Configurar URL de teste e URLs de retorno no Supabase Auth. Habilitar Google somente se houver provedor Google configurado; e-mail/senha funciona sem Google.
+5. Testar duas contas fictícias e navegação no celular, perda de rede, concorrência, cobranças e pagamentos. Após aceite, planejar migração de dados e troca de domínio. **Não utilizar dados de pagamento reais antes desse aceite.**
+
+## Financeiro manual e reversibilidade
+
+A OficinIA registra pedidos e recebimentos como um controle **operacional**, não consulta extratos, não transfere dinheiro nem se conecta a conta/chave Pix. O aviso `informado` nunca aumenta o valor recebido; apenas a confirmação após conferência gera a baixa.
+
+A versão Lovable publicada e a `main` ficam intactas até autorização explícita. Voltar ao Lovable futuramente é possível mediante revisão de compatibilidade entre branches, variáveis, autenticação e bancos, mas não haverá sincronização automática entre bancos ou garantia de que a configuração de build independente seja aceita pelo editor sem adaptações.
+
+## Fronteira das próximas fases
+
+- **Fase 4:** layout, responsividade e experiência no celular.
+- **Fase 5:** rotinas, relatórios, exportação e aprimoramentos operacionais.
+- **Fase 6:** criar/provisionar serviço real, aplicar migrations ao ambiente escolhido após backup, testar fluxos ponta a ponta com contas de teste e, com aprovação, publicar.
