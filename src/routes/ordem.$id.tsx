@@ -251,7 +251,7 @@ function Detalhe() {
   );
 }
 
-function Linha({ k, v }: { k: string; v?: string }) {
+function Linha({ k, v }: { k: string; v?: string | undefined }) {
   if (!v || !v.trim()) return null;
   return (
     <div className="grid grid-cols-[7rem_minmax(0,1fr)] gap-2">
@@ -265,7 +265,7 @@ function EditarForm({
   ordem,
   onSalvar,
 }: {
-  ordem: { cliente: string; telefone?: string; marca?: string; modelo?: string; problema: string; observacoes?: string; prazo?: string };
+  ordem: import("@/lib/oficina-store").Ordem;
   onSalvar: (dados: Partial<import("@/lib/oficina-store").Ordem>) => void;
 }) {
   const [f, setF] = useState({
