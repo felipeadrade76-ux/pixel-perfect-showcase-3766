@@ -15,9 +15,9 @@ jobs:
       - run: bun install --frozen-lockfile
       - name: Build
         run: bun run build
-      - name: ESLint das alteracoes (sem regra global de formatacao)
+      - name: ESLint completo dos arquivos alterados
         run: |
-          bunx eslint src/routes/financeiro.tsx 'src/routes/ordem.$id.tsx' src/lib/oficina-store.ts --rule 'prettier/prettier: off'
+          bunx eslint src/routes/financeiro.tsx 'src/routes/ordem.$id.tsx' src/lib/oficina-store.ts
       - name: Lint completo - diagnostico de formatacao preexistente
         run: bun run lint
         continue-on-error: true
