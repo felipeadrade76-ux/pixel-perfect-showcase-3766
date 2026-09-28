@@ -1,8 +1,9 @@
 import { Link } from "@tanstack/react-router";
-import { Home, ClipboardList, CalendarDays, Wallet, Plus, LogOut } from "lucide-react";
+import { Home, ClipboardList, CalendarDays, Wallet, Users, Plus, LogOut } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { loadOrdens, limparOrdens, selecionarUsuario } from "@/lib/oficina-store";
+import { loadClientes, limparClientes, selecionarUsuarioClientes } from "@/lib/clientes-store";
 import { supabase } from "@/integrations/supabase/client";
 import { RitmeiaBrand, RitmeiaSymbol } from "@/components/RitmeiaBrand";
 
@@ -10,6 +11,7 @@ const nav = [
   { to: "/", label: "Início", icon: Home },
   { to: "/ordens", label: "Ordens", icon: ClipboardList },
   { to: "/agenda", label: "Agenda", icon: CalendarDays },
+  { to: "/clientes", label: "Clientes", icon: Users },
   { to: "/financeiro", label: "Financeiro", icon: Wallet },
 ] as const;
 
@@ -45,8 +47,9 @@ export function AppShell({
         }
         if (!ativo) return;
         selecionarUsuario(data.session.user.id);
+        selecionarUsuarioClientes(data.session.user.id);
         setPronto(true);
-        await loadOrdens();
+        await Promise.all([loadOrdens(), loadClientes()]);
       } catch (error) {
         if (ativo)
           setErroCarga(error instanceof Error ? error.message : "Falha ao carregar ordens.");
@@ -58,10 +61,15 @@ export function AppShell({
     const { data } = supabase.auth.onAuthStateChange((e, session) => {
       if (e === "SIGNED_OUT") {
         limparOrdens();
+        limparClientes();
         irParaLogin();
-      } else if (e === "SIGNED_IN" && session && selecionarUsuario(session.user.id)) {
-        setPronto(false);
-        setTentativa((n) => n + 1);
+      } else if (e === "SIGNED_IN" && session) {
+        const mudouOrdens = selecionarUsuario(session.user.id);
+        const mudouClientes = selecionarUsuarioClientes(session.user.id);
+        if (mudouOrdens || mudouClientes) {
+          setPronto(false);
+          setTentativa((n) => n + 1);
+        }
       }
     });
     return () => {
@@ -190,7 +198,7 @@ export function AppShell({
 
       <nav
         aria-label="Navegação inferior"
-        className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-4 border-t border-border bg-card/95 px-1 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 shadow-[0_-12px_32px_rgba(15,23,42,0.07)] backdrop-blur-xl md:hidden"
+        className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 border-t border-border bg-card/95 px-1 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 shadow-[0_-12px_32px_rgba(15,23,42,0.07)] backdrop-blur-xl md:hidden"
       >
         {nav.map((n) => (
           <Link
