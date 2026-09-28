@@ -94,16 +94,17 @@ function Nova() {
             </p>
             <h2 className="mt-1 text-lg font-extrabold tracking-tight">Recebimento da máquina</h2>
           </div>
-          <div>
-          <label className={rotulo}>Nome do cliente *</label>
-          <input
-            className={campo}
-            value={f.cliente}
-            onChange={set("cliente")}
-            placeholder="Ex.: João Pereira"
-          />
-        </div>
-        <div>
+          <div className="space-y-4">
+            <div>
+              <label className={rotulo}>Nome do cliente *</label>
+              <input
+                className={campo}
+                value={f.cliente}
+                onChange={set("cliente")}
+                placeholder="Ex.: João Pereira"
+              />
+            </div>
+            <div>
           <label className={rotulo}>Tipo de máquina *</label>
           <select className={campo} value={f.tipoMaquina} onChange={set("tipoMaquina")}>
             <option value="">Selecione</option>
@@ -113,9 +114,9 @@ function Nova() {
               </option>
             ))}
           </select>
-        </div>
-        <div>
-          <label className={rotulo}>Problema relatado *</label>
+            </div>
+            <div>
+              <label className={rotulo}>Problema relatado *</label>
           <textarea
             className={campo}
             rows={3}
@@ -123,8 +124,7 @@ function Nova() {
             onChange={set("problema")}
             placeholder="O que o cliente relatou"
           />
-        </div>
-
+            </div>
           </div>
         </section>
 
