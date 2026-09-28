@@ -15,7 +15,8 @@ const mesAtual = () => mesDeData(new Date());
 const mesDe = (iso: string) => mesDeData(new Date(iso));
 const emOrcamento = (s: string) =>
   ["Recebida", "Em diagnóstico", "Aguardando aprovação"].includes(s);
-const box = "rounded-2xl border border-border bg-card p-4 shadow-[0_3px_14px_rgba(31,35,40,0.025)] sm:p-5";
+const box =
+  "rounded-2xl border border-border bg-card p-4 shadow-[0_3px_14px_rgba(31,35,40,0.025)] sm:p-5";
 const campo = "w-full rounded-xl border border-input bg-background px-3 py-3 text-base";
 
 type Cobranca = Database["public"]["Tables"]["cobrancas"]["Row"];
@@ -125,7 +126,9 @@ function Financeiro() {
           ))}
         </div>
         <section className={box}>
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-accent">Cobranças</p>
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-accent">
+            Cobranças
+          </p>
           <h2 className="mt-1 font-extrabold tracking-tight">Cobranças e avisos de pagamento</h2>
           <p className="mt-1 text-xs text-muted-foreground">
             Aviso do cliente não comprova depósito. Valores só entram em “Recebido” após confirmação
@@ -190,8 +193,12 @@ function Financeiro() {
           </div>
         </section>
         <section className={box}>
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-accent">Resumo</p>
-          <h2 className="mb-4 mt-1 font-extrabold tracking-tight">Recebido por forma de pagamento</h2>
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-accent">
+            Resumo
+          </p>
+          <h2 className="mb-4 mt-1 font-extrabold tracking-tight">
+            Recebido por forma de pagamento
+          </h2>
           <div className="space-y-4">
             {info.formas.map((x) => (
               <div key={x.forma}>
@@ -210,8 +217,12 @@ function Financeiro() {
           </div>
         </section>
         <section className={box}>
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-accent">Pendências</p>
-          <h2 className="mb-3 mt-1 font-extrabold tracking-tight">Saldos em aberto ({info.cobrancas.length})</h2>
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-accent">
+            Pendências
+          </p>
+          <h2 className="mb-3 mt-1 font-extrabold tracking-tight">
+            Saldos em aberto ({info.cobrancas.length})
+          </h2>
           <div className="mb-3 grid gap-2 sm:grid-cols-[1fr_auto]">
             <input
               aria-label="Buscar ordem ou cliente"
