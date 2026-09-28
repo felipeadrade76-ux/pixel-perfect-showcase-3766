@@ -201,27 +201,30 @@ function clientePayload(input: Partial<ClienteInput>) {
   };
 }
 
-export async function criarCliente(input: ClienteInput): Promise<Cliente> {
+export async function criarCliente(input: ClienteInput, requisicaoId = crypto.randomUUID()): Promise<Cliente> {
   if (!input.nome.trim()) throw new Error("Informe o nome do cliente.");
   const usuario = usuarioAtivo;
   const versao = sessaoVersao;
   const { data, error } = await supabase
     .from("clientes")
-    .insert(clientePayload(input))
+    .insert({ id: requisicaoId, ...clientePayload(input) })
     .select("*")
     .single();
-  if (error || !data) {
-    const duplicado = error?.code === "23505";
-    throw new Error(
-      duplicado
-        ? "Já existe um cliente com este CPF/CNPJ."
-        : "Não foi possível salvar o cliente. Tente novamente.",
-    );
+  let salva = data;
+  if (error?.code === "23505") {
+    const repetido = await supabase
+      .from("clientes")
+      .select("*")
+      .eq("id", requisicaoId)
+      .maybeSingle();
+    if (!repetido.error && repetido.data) salva = repetido.data;
+    else throw new Error("Já existe um cliente com este CPF/CNPJ.");
   }
+  if (!salva) throw new Error("Não foi possível salvar o cliente. Tente novamente.");
   if (usuario !== usuarioAtivo || versao !== sessaoVersao) {
     throw new Error("A sessão mudou durante o cadastro. Entre novamente.");
   }
-  const cliente = clienteFromRow(data as ClienteRow);
+  const cliente = clienteFromRow(salva as ClienteRow);
   clientes = [...clientes.filter((item) => item.id !== cliente.id), cliente].sort((a, b) =>
     a.nome.localeCompare(b.nome, "pt-BR"),
   );
@@ -271,27 +274,31 @@ function equipamentoPayload(clienteId: string, input: Partial<EquipamentoInput>)
 export async function criarEquipamento(
   clienteId: string,
   input: EquipamentoInput,
+  requisicaoId = crypto.randomUUID(),
 ): Promise<Equipamento> {
   if (!input.tipo.trim()) throw new Error("Informe o tipo da máquina.");
   const usuario = usuarioAtivo;
   const versao = sessaoVersao;
   const { data, error } = await supabase
     .from("equipamentos")
-    .insert(equipamentoPayload(clienteId, input))
+    .insert({ id: requisicaoId, ...equipamentoPayload(clienteId, input) })
     .select("*")
     .single();
-  if (error || !data) {
-    const duplicado = error?.code === "23505";
-    throw new Error(
-      duplicado
-        ? "Já existe uma máquina com este número de série."
-        : "Não foi possível salvar a máquina.",
-    );
+  let salva = data;
+  if (error?.code === "23505") {
+    const repetido = await supabase
+      .from("equipamentos")
+      .select("*")
+      .eq("id", requisicaoId)
+      .maybeSingle();
+    if (!repetido.error && repetido.data) salva = repetido.data;
+    else throw new Error("Já existe uma máquina com este número de série.");
   }
+  if (!salva) throw new Error("Não foi possível salvar a máquina.");
   if (usuario !== usuarioAtivo || versao !== sessaoVersao) {
     throw new Error("A sessão mudou durante o cadastro da máquina.");
   }
-  const equipamento = equipamentoFromRow(data as EquipamentoRow);
+  const equipamento = equipamentoFromRow(salva as EquipamentoRow);
   equipamentos = [equipamento, ...equipamentos.filter((item) => item.id !== equipamento.id)];
   emit();
   return equipamento;
