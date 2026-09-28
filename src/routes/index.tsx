@@ -16,13 +16,13 @@ import { atrasada, carregarExemplos, dataCurta, useOrdens } from "@/lib/oficina-
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Oficina Inteligente — Painel da oficina" },
+      { title: "Ritmeia — Painel da oficina" },
       {
         name: "description",
         content:
           "Painel com máquinas em manutenção, aguardando diagnóstico, prontas para retirada e serviços atrasados.",
       },
-      { property: "og:title", content: "Oficina Inteligente — Painel da oficina" },
+      { property: "og:title", content: "Ritmeia — Painel da oficina" },
       {
         property: "og:description",
         content: "Controle de ordens de serviço para oficina de máquinas.",
@@ -65,17 +65,19 @@ function Painel() {
 
   return (
     <AppShell title="Painel da oficina" subtitle="Sua operação em um só lugar">
-      <section className="mb-5 overflow-hidden rounded-[26px] bg-primary px-5 py-6 text-primary-foreground shadow-[0_18px_45px_rgba(17,29,43,0.12)] sm:px-7 sm:py-8">
+      <section className="mb-5 overflow-hidden rounded-[26px] border border-border bg-card px-5 py-6 text-foreground shadow-[0_18px_45px_rgba(31,35,40,0.06)] sm:px-7 sm:py-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-white/80">
+          <span className="rounded-full border border-accent/25 bg-accent/8 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-accent">
             Visão geral
           </span>
-          <span className="text-xs font-medium capitalize text-white/65">{data}</span>
+          <span className="text-xs font-medium capitalize text-muted-foreground">{data}</span>
         </div>
         <h2 className="mt-5 max-w-lg text-[27px] font-extrabold leading-tight tracking-tight sm:text-3xl">
-          Tudo em ordem na sua oficina.
+          {atrasadas.length > 0
+            ? `${atrasadas.length} ${atrasadas.length === 1 ? "serviço precisa" : "serviços precisam"} de atenção.`
+            : "Sua oficina, no ritmo certo."}
         </h2>
-        <p className="mt-2 max-w-lg text-sm leading-relaxed text-white/70">
+        <p className="mt-2 max-w-lg text-sm leading-relaxed text-muted-foreground">
           Acompanhe as máquinas, os prazos e as próximas entregas sem perder o controle.
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
@@ -87,7 +89,7 @@ function Painel() {
           </Link>
           <Link
             to="/ordens"
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/25 bg-white/10 px-5 text-sm font-bold text-white transition-colors hover:bg-white/15"
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border bg-background px-5 text-sm font-bold text-foreground transition-colors hover:bg-secondary"
           >
             Ver ordens <ArrowUpRight className="h-4 w-4" />
           </Link>
