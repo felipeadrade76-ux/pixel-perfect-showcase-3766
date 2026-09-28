@@ -8,6 +8,105 @@ export type Database = {
   };
   public: {
     Tables: {
+      clientes: {
+        Row: {
+          id: string;
+          user_id: string;
+          nome: string;
+          telefone: string | null;
+          documento: string | null;
+          email: string | null;
+          cep: string | null;
+          logradouro: string | null;
+          numero: string | null;
+          complemento: string | null;
+          bairro: string | null;
+          cidade: string | null;
+          uf: string | null;
+          observacoes: string | null;
+          criado_em: string;
+          atualizado_em: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string;
+          nome: string;
+          telefone?: string | null;
+          documento?: string | null;
+          email?: string | null;
+          cep?: string | null;
+          logradouro?: string | null;
+          numero?: string | null;
+          complemento?: string | null;
+          bairro?: string | null;
+          cidade?: string | null;
+          uf?: string | null;
+          observacoes?: string | null;
+          criado_em?: string;
+          atualizado_em?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          nome?: string;
+          telefone?: string | null;
+          documento?: string | null;
+          email?: string | null;
+          cep?: string | null;
+          logradouro?: string | null;
+          numero?: string | null;
+          complemento?: string | null;
+          bairro?: string | null;
+          cidade?: string | null;
+          uf?: string | null;
+          observacoes?: string | null;
+          criado_em?: string;
+          atualizado_em?: string;
+        };
+        Relationships: [];
+      };
+      equipamentos: {
+        Row: {
+          id: string;
+          user_id: string;
+          cliente_id: string;
+          tipo: string;
+          marca: string | null;
+          modelo: string | null;
+          serie: string | null;
+          apelido: string | null;
+          observacoes: string | null;
+          criado_em: string;
+          atualizado_em: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string;
+          cliente_id: string;
+          tipo: string;
+          marca?: string | null;
+          modelo?: string | null;
+          serie?: string | null;
+          apelido?: string | null;
+          observacoes?: string | null;
+          criado_em?: string;
+          atualizado_em?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          cliente_id?: string;
+          tipo?: string;
+          marca?: string | null;
+          modelo?: string | null;
+          serie?: string | null;
+          apelido?: string | null;
+          observacoes?: string | null;
+          criado_em?: string;
+          atualizado_em?: string;
+        };
+        Relationships: [];
+      };
       cobrancas: {
         Row: {
           id: string;
@@ -47,6 +146,8 @@ export type Database = {
       ordens: {
         Row: {
           cliente: string;
+          cliente_id: string | null;
+          equipamento_id: string | null;
           concluida_em: string | null;
           criada_em: string;
           entregue_em: string | null;
@@ -69,6 +170,8 @@ export type Database = {
         };
         Insert: {
           cliente: string;
+          cliente_id?: string | null;
+          equipamento_id?: string | null;
           concluida_em?: string | null;
           criada_em?: string;
           entregue_em?: string | null;
@@ -91,6 +194,8 @@ export type Database = {
         };
         Update: {
           cliente?: string;
+          cliente_id?: string | null;
+          equipamento_id?: string | null;
           concluida_em?: string | null;
           criada_em?: string;
           entregue_em?: string | null;
