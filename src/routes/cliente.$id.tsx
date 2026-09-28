@@ -67,7 +67,10 @@ function ClienteDetalhe() {
   return (
     <AppShell title={cliente.nome} subtitle="Cadastro do cliente">
       <div className="mx-auto max-w-3xl space-y-4">
-        <Link to="/clientes" className="inline-flex items-center gap-1 text-sm font-semibold text-accent">
+        <Link
+          to="/clientes"
+          className="inline-flex items-center gap-1 text-sm font-semibold text-accent"
+        >
           <ArrowLeft className="h-4 w-4" /> Todos os clientes
         </Link>
 
@@ -164,7 +167,9 @@ function ClienteDetalhe() {
             <EquipamentoForm
               ocupado={ocupado}
               onSalvar={async (dados) => {
-                if (await executar(() => criarEquipamento(cliente.id, dados))) setNovaMaquina(false);
+                if (await executar(() => criarEquipamento(cliente.id, dados))) {
+                  setNovaMaquina(false);
+                }
               }}
             />
           ) : null}
@@ -262,21 +267,23 @@ function ClienteForm({
     observacoes: cliente.observacoes ?? "",
   });
 
+  const campos = [
+    ["nome", "Nome ou razão social"],
+    ["telefone", "Telefone"],
+    ["documento", "CPF ou CNPJ"],
+    ["email", "E-mail"],
+    ["cep", "CEP"],
+    ["logradouro", "Logradouro"],
+    ["numero", "Número"],
+    ["complemento", "Complemento"],
+    ["bairro", "Bairro"],
+    ["cidade", "Cidade"],
+    ["uf", "UF"],
+  ] as const;
+
   return (
     <div className="mt-4 grid gap-3 sm:grid-cols-2">
-      {([
-        ["nome", "Nome ou razão social"],
-        ["telefone", "Telefone"],
-        ["documento", "CPF ou CNPJ"],
-        ["email", "E-mail"],
-        ["cep", "CEP"],
-        ["logradouro", "Logradouro"],
-        ["numero", "Número"],
-        ["complemento", "Complemento"],
-        ["bairro", "Bairro"],
-        ["cidade", "Cidade"],
-        ["uf", "UF"],
-      ] as const).map(([key, label]) => (
+      {campos.map(([key, label]) => (
         <label key={key}>
           <span className="mb-1 block text-xs font-semibold text-muted-foreground">{label}</span>
           <input
@@ -414,7 +421,9 @@ function EquipamentoCard({
         <div className="min-w-0 flex-1">
           <p className="font-bold">
             {equipamento.apelido || equipamento.tipo}
-            {equipamento.apelido ? <span className="font-normal"> · {equipamento.tipo}</span> : null}
+            {equipamento.apelido ? (
+              <span className="font-normal"> · {equipamento.tipo}</span>
+            ) : null}
           </p>
           <p className="text-sm text-muted-foreground">{descricao}</p>
           {equipamento.serie ? (
