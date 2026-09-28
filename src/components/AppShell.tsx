@@ -80,13 +80,21 @@ export function AppShell({
         Pular para o conteúdo
       </a>
       <aside className="hidden w-[272px] shrink-0 flex-col border-r border-sidebar-border bg-sidebar px-4 py-6 text-sidebar-foreground md:sticky md:top-0 md:flex md:h-screen">
-        <Link to="/" className="flex items-center gap-3 rounded-2xl px-3 py-3" aria-label="OficinIA — ir para o início">
+        <Link
+          to="/"
+          className="flex items-center gap-3 rounded-2xl px-3 py-3"
+          aria-label="OficinIA — ir para o início"
+        >
           <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sidebar-primary text-sidebar-primary-foreground">
             <Wrench className="h-6 w-6" strokeWidth={2.5} />
           </span>
           <span className="min-w-0">
-            <span className="block text-xl font-extrabold tracking-tight">Oficin<span className="text-sidebar-primary">IA</span></span>
-            <span className="block text-[11px] font-medium tracking-[0.15em] text-sidebar-foreground/60">GESTÃO DE OFICINA</span>
+            <span className="block text-xl font-extrabold tracking-tight">
+              Oficin<span className="text-sidebar-primary">IA</span>
+            </span>
+            <span className="block text-[11px] font-medium tracking-[0.15em] text-sidebar-foreground/60">
+              GESTÃO DE OFICINA
+            </span>
           </span>
         </Link>
         <p className="mb-3 mt-10 px-4 text-[11px] font-bold uppercase tracking-[0.15em] text-sidebar-foreground/50">
@@ -130,9 +138,15 @@ export function AppShell({
               <Wrench className="h-5 w-5" />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-accent md:hidden">OficinIA</p>
-              <h1 className="truncate text-lg font-extrabold tracking-tight text-foreground sm:text-xl md:text-2xl">{title}</h1>
-              {subtitle ? <p className="truncate text-xs text-muted-foreground md:text-sm">{subtitle}</p> : null}
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-accent md:hidden">
+                OficinIA
+              </p>
+              <h1 className="truncate text-lg font-extrabold tracking-tight text-foreground sm:text-xl md:text-2xl">
+                {title}
+              </h1>
+              {subtitle ? (
+                <p className="truncate text-xs text-muted-foreground md:text-sm">{subtitle}</p>
+              ) : null}
             </div>
             <Link
               to="/nova"
@@ -151,10 +165,16 @@ export function AppShell({
             </button>
           </div>
         </header>
-        <main id="conteudo-principal" className="min-w-0 flex-1 px-4 pb-32 pt-5 sm:px-6 md:px-8 md:pb-10 md:pt-8">
+        <main
+          id="conteudo-principal"
+          className="min-w-0 flex-1 px-4 pb-32 pt-5 sm:px-6 md:px-8 md:pb-10 md:pt-8"
+        >
           <div className="mx-auto w-full max-w-6xl">
             {erroCarga ? (
-              <div role="alert" className="mb-5 rounded-2xl border border-destructive/30 bg-destructive/5 p-5 text-sm text-destructive">
+              <div
+                role="alert"
+                className="mb-5 rounded-2xl border border-destructive/30 bg-destructive/5 p-5 text-sm text-destructive"
+              >
                 <p>{erroCarga}</p>
                 <button
                   type="button"

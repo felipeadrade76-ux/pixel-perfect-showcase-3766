@@ -1,5 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Plus, AlertTriangle, Wrench, Search, PackageCheck, ArrowUpRight, ChevronRight, ClipboardList } from "lucide-react";
+import {
+  Plus,
+  AlertTriangle,
+  Wrench,
+  Search,
+  PackageCheck,
+  ArrowUpRight,
+  ChevronRight,
+  ClipboardList,
+} from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { StatusBadge } from "@/components/StatusBadge";
 import { atrasada, carregarExemplos, dataCurta, useOrdens } from "@/lib/oficina-store";
@@ -87,8 +96,13 @@ function Painel() {
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Resumo da oficina">
         {cards.map((c) => (
-          <div key={c.label} className="rounded-2xl border border-border bg-card p-4 shadow-[0_3px_14px_rgba(17,29,43,0.025)] sm:p-5">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary"><c.icon className={`h-5 w-5 ${c.cor}`} /></span>
+          <div
+            key={c.label}
+            className="rounded-2xl border border-border bg-card p-4 shadow-[0_3px_14px_rgba(17,29,43,0.025)] sm:p-5"
+          >
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary">
+              <c.icon className={`h-5 w-5 ${c.cor}`} />
+            </span>
             <p className="mt-4 text-3xl font-extrabold tracking-tight text-foreground">{c.n}</p>
             <p className="mt-1 text-xs font-semibold text-muted-foreground sm:text-sm">{c.label}</p>
           </div>
@@ -97,17 +111,28 @@ function Painel() {
 
       <div className="mb-3 mt-8 flex items-center justify-between gap-3">
         <div>
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-accent">Acompanhamento</p>
-          <h2 className="mt-1 text-lg font-extrabold tracking-tight text-foreground">Máquinas na oficina</h2>
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-accent">
+            Acompanhamento
+          </p>
+          <h2 className="mt-1 text-lg font-extrabold tracking-tight text-foreground">
+            Máquinas na oficina
+          </h2>
         </div>
-        <Link to="/ordens" className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-xl px-2 text-xs font-bold text-accent hover:bg-secondary">
+        <Link
+          to="/ordens"
+          className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-xl px-2 text-xs font-bold text-accent hover:bg-secondary"
+        >
           Ver todas <ChevronRight className="h-4 w-4" />
         </Link>
       </div>
       <div className="space-y-3">
         {ativas.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-card p-7 text-sm text-muted-foreground">
-            <ClipboardList className="mb-3 h-9 w-9 text-muted-foreground/60" /><p className="font-semibold">Nenhuma máquina na oficina no momento.</p><p className="mt-1 text-xs">Cadastre a primeira ordem para começar a acompanhar os serviços.</p>
+            <ClipboardList className="mb-3 h-9 w-9 text-muted-foreground/60" />
+            <p className="font-semibold">Nenhuma máquina na oficina no momento.</p>
+            <p className="mt-1 text-xs">
+              Cadastre a primeira ordem para começar a acompanhar os serviços.
+            </p>
             {ordens.length === 0 ? (
               <button
                 onClick={carregarExemplos}
@@ -135,7 +160,9 @@ function Painel() {
               </div>
               <StatusBadge status={o.status} />
             </div>
-            <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-muted-foreground">{o.problema}</p>
+            <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
+              {o.problema}
+            </p>
             {o.prazo ? (
               <p
                 className={`mt-2 text-xs font-semibold ${atrasada(o) ? "text-destructive" : "text-muted-foreground"}`}
