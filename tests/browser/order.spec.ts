@@ -268,9 +268,7 @@ test("an authenticated user can create an OS and reopen it in a mobile viewport"
   await page.locator('input[placeholder="Ex.: João Pereira"]').fill("Cliente de teste");
   await page.getByRole("button", { name: /Cliente de teste/ }).click();
   await expect(page.getByText("Cadastro salvo")).toBeVisible();
-  await page
-    .getByLabel("Máquina já cadastrada")
-    .selectOption(String(savedEquipment?.id ?? ""));
+  await page.getByLabel("Máquina já cadastrada").selectOption(String(savedEquipment?.id ?? ""));
   await expect(page.getByLabel("Tipo de máquina *")).toHaveValue("Motosserra");
   await expect(page.getByText("Dados preenchidos a partir da máquina salva")).toBeVisible();
 
