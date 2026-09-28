@@ -29,7 +29,7 @@ if [[ "$ready" != 1 ]]; then
   exit 1
 fi
 
-grep -q 'OficinIA' "$root" || {
+grep -q 'Ritmeia' "$root" || {
   echo "SSR did not render the expected app title" >&2
   cat "$log" >&2
   exit 1
