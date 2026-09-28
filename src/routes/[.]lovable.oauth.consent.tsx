@@ -1,6 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { RitmeiaBrand } from "@/components/RitmeiaBrand";
 
 type Details = {
   client?: { name?: string } | null;
@@ -39,9 +40,9 @@ export const Route = createFileRoute("/.lovable/oauth/consent")({
   },
   head: () => ({
     meta: [
-      { title: "Autorizar acesso — Oficina Inteligente" },
+      { title: "Autorizar acesso — Ritmeia" },
       { name: "description", content: "Autorize um assistente a acessar sua oficina." },
-      { property: "og:title", content: "Autorizar acesso — Oficina Inteligente" },
+      { property: "og:title", content: "Autorizar acesso — Ritmeia" },
       { property: "og:description", content: "Autorize um assistente a acessar sua oficina." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -49,8 +50,13 @@ export const Route = createFileRoute("/.lovable/oauth/consent")({
   }),
   component: Consent,
   errorComponent: ({ error }) => (
-    <main className="p-6">
-      Não foi possível carregar este pedido: {String(error?.message ?? error)}
+    <main className="flex min-h-screen items-center justify-center bg-background p-4">
+      <div className="w-full max-w-sm rounded-[28px] border border-border bg-card p-6 shadow-[0_24px_70px_rgba(31,35,40,0.08)]">
+        <RitmeiaBrand />
+        <p role="alert" className="mt-5 text-sm text-destructive">
+          Não foi possível carregar este pedido: {String(error?.message ?? error)}
+        </p>
+      </div>
     </main>
   ),
 });
@@ -80,9 +86,10 @@ function Consent() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-primary p-4">
-      <div className="w-full max-w-sm rounded-2xl bg-card p-6 text-card-foreground shadow-lg">
-        <h1 className="text-xl font-bold">Conectar {nome} à Oficina Inteligente</h1>
+    <main className="flex min-h-screen items-center justify-center bg-background p-4">
+      <div className="w-full max-w-sm rounded-[28px] border border-border bg-card p-6 text-card-foreground shadow-[0_24px_70px_rgba(31,35,40,0.08)]">
+        <RitmeiaBrand />
+        <h1 className="mt-6 text-xl font-extrabold tracking-tight">Conectar {nome} à Ritmeia</h1>
         <p className="mt-2 text-sm text-muted-foreground">Conta: {email}</p>
         <p className="mt-4">
           {nome} poderá consultar e atualizar suas ordens de serviço em seu nome.
@@ -98,14 +105,14 @@ function Consent() {
         <button
           disabled={busy}
           onClick={() => decide(true)}
-          className="mt-6 h-12 w-full rounded-lg bg-accent font-bold text-accent-foreground"
+          className="mt-6 min-h-12 w-full rounded-xl bg-accent font-bold text-accent-foreground disabled:opacity-50"
         >
           Autorizar
         </button>
         <button
           disabled={busy}
           onClick={() => decide(false)}
-          className="mt-2 h-12 w-full rounded-lg border border-input font-medium"
+          className="mt-2 min-h-12 w-full rounded-xl border border-input font-semibold hover:bg-secondary disabled:opacity-50"
         >
           Cancelar conexão
         </button>

@@ -24,13 +24,13 @@ import {
 export const Route = createFileRoute("/ordem/$id")({
   head: () => ({
     meta: [
-      { title: "Ordem de serviço — Oficina Inteligente" },
+      { title: "Ordem de serviço — Ritmeia" },
       {
         name: "description",
         content:
           "Detalhes da ordem: status, histórico automático, peças, mão de obra e pagamentos.",
       },
-      { property: "og:title", content: "Ordem de serviço — Oficina Inteligente" },
+      { property: "og:title", content: "Ordem de serviço — Ritmeia" },
       { property: "og:description", content: "Detalhes e histórico da ordem de serviço." },
     ],
   }),
@@ -39,7 +39,8 @@ export const Route = createFileRoute("/ordem/$id")({
 
 const campo =
   "w-full rounded-xl border border-input bg-card px-3 py-3 text-base outline-none focus:border-accent";
-const bloco = "rounded-2xl border border-border bg-card p-4";
+const bloco =
+  "rounded-2xl border border-border bg-card p-4 shadow-[0_3px_14px_rgba(31,35,40,0.025)] sm:p-5";
 
 function Detalhe() {
   const { id } = Route.useParams();
@@ -163,7 +164,10 @@ function Detalhe() {
           </p>
         ) : null}
         <section className={bloco}>
-          <h2 className="mb-3 font-bold">Peças e mão de obra</h2>
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-accent">
+            Serviço
+          </p>
+          <h2 className="mb-3 mt-1 font-extrabold tracking-tight">Peças e mão de obra</h2>
           <div className="space-y-2">
             {ordem.itens.map((i) => (
               <div
@@ -254,7 +258,10 @@ function Detalhe() {
         <CobrancaAssistida ordem={ordem} />
 
         <section className={bloco}>
-          <h2 className="mb-3 font-bold">Pagamentos</h2>
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-accent">
+            Financeiro
+          </p>
+          <h2 className="mb-3 mt-1 font-extrabold tracking-tight">Pagamentos</h2>
           {ordem.pagamentos.map((p) => (
             <div key={p.id} className="flex justify-between text-sm">
               <span className="text-muted-foreground">
@@ -349,7 +356,10 @@ function Detalhe() {
         </section>
 
         <section className={bloco}>
-          <h2 className="mb-3 font-bold">Histórico automático</h2>
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-accent">
+            Linha do tempo
+          </p>
+          <h2 className="mb-3 mt-1 font-extrabold tracking-tight">Histórico automático</h2>
           <ol className="space-y-3">
             {[...ordem.historico].reverse().map((h, i) => (
               <li key={i} className="border-l-2 border-accent pl-3">

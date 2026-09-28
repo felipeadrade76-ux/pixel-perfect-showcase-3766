@@ -1,0 +1,26 @@
+name: OficinIA - formatar layout (temporario)
+on:
+  workflow_dispatch:
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/oficinia-v10-layout-mobile
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - name: Formatar telas alteradas
+        run: bunx prettier --write src/components/AppShell.tsx src/routes/index.tsx src/routes/ordens.tsx src/styles.css
+      - name: Commit formatado sem alterar historico
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/components/AppShell.tsx src/routes/index.tsx src/routes/ordens.tsx src/styles.css
+          if ! git diff --cached --quiet; then
+            git commit -m "style: format phase 4 layout files"
+            git push origin HEAD:feature/oficinia-v10-layout-mobile
+          fi

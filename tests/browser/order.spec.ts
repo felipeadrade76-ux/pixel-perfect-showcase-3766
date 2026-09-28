@@ -182,4 +182,19 @@ test("an authenticated user can create an OS and reopen it in a mobile viewport"
   await page.getByRole("link", { name: "Financeiro" }).first().click();
   await expect(page.getByText("Recebido no mês")).toBeVisible();
   await expect(page.getByText("R$ 60,00").first()).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+
+  await page.getByRole("link", { name: "Agenda" }).first().click();
+  await expect(page.getByRole("heading", { name: "Agenda" })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+
+  await page.getByRole("link", { name: "Ordens" }).first().click();
+  await expect(page.getByRole("heading", { name: "Ordens de serviço" })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+
+  await page.setViewportSize({ width: 1365, height: 900 });
+  await page.goto("/");
+  await expect(page.getByLabel("Menu principal")).toBeVisible();
+  await expect(page.getByLabel("Ritmeia — ir para o início")).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
 });
