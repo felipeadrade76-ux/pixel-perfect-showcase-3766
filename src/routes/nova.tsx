@@ -299,8 +299,11 @@ function Nova() {
 
           {clienteId && maquinas.length ? (
             <div className="mb-4">
-              <label className={rotulo}>Máquina já cadastrada</label>
+              <label className={rotulo} htmlFor="maquina-cadastrada">
+                Máquina já cadastrada
+              </label>
               <select
+                id="maquina-cadastrada"
                 className={campo}
                 value={equipamentoId}
                 onChange={(e) => selecionarMaquina(e.target.value)}
@@ -326,8 +329,10 @@ function Nova() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className={rotulo}>Tipo de máquina *</label>
-              <select className={campo} value={f.tipoMaquina} onChange={set("tipoMaquina")}>
+              <label className={rotulo} htmlFor="tipo-maquina">
+                Tipo de máquina *
+              </label>
+              <select id="tipo-maquina" className={campo} value={f.tipoMaquina} onChange={set("tipoMaquina")}>
                 <option value="">Selecione</option>
                 {tipos.map((t) => (
                   <option key={t} value={t}>
