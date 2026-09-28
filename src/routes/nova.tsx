@@ -332,7 +332,12 @@ function Nova() {
               <label className={rotulo} htmlFor="tipo-maquina">
                 Tipo de máquina *
               </label>
-              <select id="tipo-maquina" className={campo} value={f.tipoMaquina} onChange={set("tipoMaquina")}>
+              <select
+                id="tipo-maquina"
+                className={campo}
+                value={f.tipoMaquina}
+                onChange={set("tipoMaquina")}
+              >
                 <option value="">Selecione</option>
                 {tipos.map((t) => (
                   <option key={t} value={t}>
