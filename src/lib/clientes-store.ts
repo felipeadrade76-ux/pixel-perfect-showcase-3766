@@ -1,20 +1,21 @@
 import { useSyncExternalStore } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 
 export type Cliente = {
   id: string;
   nome: string;
-  telefone?: string;
-  documento?: string;
-  email?: string;
-  cep?: string;
-  logradouro?: string;
-  numero?: string;
-  complemento?: string;
-  bairro?: string;
-  cidade?: string;
-  uf?: string;
-  observacoes?: string;
+  telefone?: string | undefined;
+  documento?: string | undefined;
+  email?: string | undefined;
+  cep?: string | undefined;
+  logradouro?: string | undefined;
+  numero?: string | undefined;
+  complemento?: string | undefined;
+  bairro?: string | undefined;
+  cidade?: string | undefined;
+  uf?: string | undefined;
+  observacoes?: string | undefined;
   criadoEm: string;
   atualizadoEm: string;
 };
@@ -23,11 +24,11 @@ export type Equipamento = {
   id: string;
   clienteId: string;
   tipo: string;
-  marca?: string;
-  modelo?: string;
-  serie?: string;
-  apelido?: string;
-  observacoes?: string;
+  marca?: string | undefined;
+  modelo?: string | undefined;
+  serie?: string | undefined;
+  apelido?: string | undefined;
+  observacoes?: string | undefined;
   criadoEm: string;
   atualizadoEm: string;
 };
@@ -184,9 +185,10 @@ export async function loadClientes(): Promise<void> {
 
 export type ClienteInput = Omit<Cliente, "id" | "criadoEm" | "atualizadoEm">;
 
-function clientePayload(input: Partial<ClienteInput>) {
-  return {
-    nome: input.nome?.trim(),
+function clientePayload(
+  input: Partial<ClienteInput>,
+): Database["public"]["Tables"]["clientes"]["Update"] {
+  const payload: Database["public"]["Tables"]["clientes"]["Update"] = {
     telefone: input.telefone?.trim() || null,
     documento: somenteDigitos(input.documento) ?? null,
     email: input.email?.trim().toLowerCase() || null,
@@ -199,6 +201,8 @@ function clientePayload(input: Partial<ClienteInput>) {
     uf: input.uf?.trim().toUpperCase().slice(0, 2) || null,
     observacoes: input.observacoes?.trim() || null,
   };
+  if (input.nome !== undefined) payload.nome = input.nome.trim();
+  return payload;
 }
 
 export async function criarCliente(input: ClienteInput, requisicaoId = crypto.randomUUID()): Promise<Cliente> {
@@ -237,7 +241,6 @@ export async function editarCliente(id: string, input: Partial<ClienteInput>): P
   const usuario = usuarioAtivo;
   const versao = sessaoVersao;
   const payload = clientePayload(input);
-  if (input.nome === undefined) delete (payload as { nome?: string }).nome;
   const { data, error } = await supabase
     .from("clientes")
     .update(payload)
@@ -259,16 +262,20 @@ export type EquipamentoInput = Omit<
   "id" | "criadoEm" | "atualizadoEm" | "clienteId"
 >;
 
-function equipamentoPayload(clienteId: string, input: Partial<EquipamentoInput>) {
-  return {
+function equipamentoPayload(
+  clienteId: string,
+  input: Partial<EquipamentoInput>,
+): Database["public"]["Tables"]["equipamentos"]["Update"] {
+  const payload: Database["public"]["Tables"]["equipamentos"]["Update"] = {
     cliente_id: clienteId,
-    tipo: input.tipo?.trim(),
     marca: input.marca?.trim() || null,
     modelo: input.modelo?.trim() || null,
     serie: input.serie?.trim() || null,
     apelido: input.apelido?.trim() || null,
     observacoes: input.observacoes?.trim() || null,
   };
+  if (input.tipo !== undefined) payload.tipo = input.tipo.trim();
+  return payload;
 }
 
 export async function criarEquipamento(
@@ -316,7 +323,6 @@ export async function editarEquipamento(
 ): Promise<Equipamento> {
   if (input.tipo !== undefined && !input.tipo.trim()) throw new Error("Informe o tipo da máquina.");
   const payload = equipamentoPayload(clienteId, input);
-  if (input.tipo === undefined) delete (payload as { tipo?: string }).tipo;
   const usuario = usuarioAtivo;
   const versao = sessaoVersao;
   const { data, error } = await supabase
