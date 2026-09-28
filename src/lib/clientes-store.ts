@@ -185,6 +185,21 @@ export async function loadClientes(): Promise<void> {
 
 export type ClienteInput = Omit<Cliente, "id" | "criadoEm" | "atualizadoEm">;
 
+function validarDadosFiscais(input: Partial<ClienteInput>) {
+  const documento = somenteDigitos(input.documento);
+  const cep = somenteDigitos(input.cep);
+  const uf = input.uf?.trim();
+  if (documento && documento.length !== 11 && documento.length !== 14) {
+    throw new Error("CPF/CNPJ deve ter 11 ou 14 números.");
+  }
+  if (cep && cep.length !== 8) {
+    throw new Error("CEP deve ter 8 números.");
+  }
+  if (uf && uf.length !== 2) {
+    throw new Error("UF deve ter 2 letras.");
+  }
+}
+
 function clientePayload(
   input: Partial<ClienteInput>,
 ): Database["public"]["Tables"]["clientes"]["Update"] {
@@ -207,6 +222,7 @@ function clientePayload(
 
 export async function criarCliente(input: ClienteInput, requisicaoId = crypto.randomUUID()): Promise<Cliente> {
   if (!input.nome.trim()) throw new Error("Informe o nome do cliente.");
+  validarDadosFiscais(input);
   const usuario = usuarioAtivo;
   const versao = sessaoVersao;
   const { data, error } = await supabase
@@ -238,6 +254,7 @@ export async function criarCliente(input: ClienteInput, requisicaoId = crypto.ra
 
 export async function editarCliente(id: string, input: Partial<ClienteInput>): Promise<Cliente> {
   if (input.nome !== undefined && !input.nome.trim()) throw new Error("Informe o nome do cliente.");
+  validarDadosFiscais(input);
   const usuario = usuarioAtivo;
   const versao = sessaoVersao;
   const payload = clientePayload(input);
