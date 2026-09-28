@@ -36,10 +36,72 @@ test("an authenticated user can create an OS and reopen it in a mobile viewport"
   }, user);
 
   let saved: Record<string, unknown> | null = null;
+  let savedClient: Record<string, unknown> | null = null;
+  let savedEquipment: Record<string, unknown> | null = null;
   let charge: Record<string, unknown> | null = null;
   await page.route("https://example.supabase.co/**", async (route) => {
     const url = new URL(route.request().url());
-    if (url.pathname === "/rest/v1/ordens") {
+    if (url.pathname === "/rest/v1/clientes") {
+      if (route.request().method() === "POST") {
+        const posted = JSON.parse(route.request().postData() ?? "{}");
+        savedClient = {
+          telefone: null,
+          documento: null,
+          email: null,
+          cep: null,
+          logradouro: null,
+          numero: null,
+          complemento: null,
+          bairro: null,
+          cidade: null,
+          uf: null,
+          observacoes: null,
+          ...posted,
+          user_id: userId,
+          criado_em: "2026-09-28T12:00:00.000Z",
+          atualizado_em: "2026-09-28T12:00:00.000Z",
+        };
+        await route.fulfill({
+          status: 201,
+          contentType: "application/json",
+          body: JSON.stringify(savedClient),
+        });
+      } else {
+        const single = (route.request().headers()["accept"] ?? "").includes("vnd.pgrst.object");
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(single ? savedClient : savedClient ? [savedClient] : []),
+        });
+      }
+    } else if (url.pathname === "/rest/v1/equipamentos") {
+      if (route.request().method() === "POST") {
+        const posted = JSON.parse(route.request().postData() ?? "{}");
+        savedEquipment = {
+          marca: null,
+          modelo: null,
+          serie: null,
+          apelido: null,
+          observacoes: null,
+          ...posted,
+          user_id: userId,
+          criado_em: "2026-09-28T12:01:00.000Z",
+          atualizado_em: "2026-09-28T12:01:00.000Z",
+        };
+        await route.fulfill({
+          status: 201,
+          contentType: "application/json",
+          body: JSON.stringify(savedEquipment),
+        });
+      } else {
+        const single = (route.request().headers()["accept"] ?? "").includes("vnd.pgrst.object");
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(single ? savedEquipment : savedEquipment ? [savedEquipment] : []),
+        });
+      }
+    } else if (url.pathname === "/rest/v1/ordens") {
       if (route.request().method() === "POST") {
         const posted = JSON.parse(route.request().postData() ?? "{}");
         saved = {
@@ -151,6 +213,10 @@ test("an authenticated user can create an OS and reopen it in a mobile viewport"
   await expect(page.getByText("OS-0001").first()).toBeVisible();
   await expect(page.getByText("Cliente de teste").first()).toBeVisible();
   expect(saved).not.toBeNull();
+  expect(savedClient).not.toBeNull();
+  expect(savedEquipment).not.toBeNull();
+  expect(saved?.cliente_id).toBe(savedClient?.id);
+  expect(saved?.equipamento_id).toBe(savedEquipment?.id);
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
 
   // Real browser interaction; Supabase responses are controlled by this test.
@@ -187,6 +253,16 @@ test("an authenticated user can create an OS and reopen it in a mobile viewport"
   await page.getByRole("link", { name: "Agenda" }).first().click();
   await expect(page.getByRole("heading", { name: "Agenda" })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+
+  await page.getByRole("link", { name: "Clientes" }).first().click();
+  await expect(page.getByRole("heading", { name: "Clientes" })).toBeVisible();
+  await expect(page.getByText("Cliente de teste").first()).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+
+  await page.getByRole("link", { name: "Cliente de teste" }).first().click();
+  await expect(page.getByRole("heading", { name: "Cliente de teste" })).toBeVisible();
+  await expect(page.getByText("Motosserra").first()).toBeVisible();
+  await expect(page.getByText("OS-0001").first()).toBeVisible();
 
   await page.getByRole("link", { name: "Ordens" }).first().click();
   await expect(page.getByRole("heading", { name: "Ordens de serviço" })).toBeVisible();
