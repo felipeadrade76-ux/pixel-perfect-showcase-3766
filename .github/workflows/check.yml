@@ -3,7 +3,7 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [feature/oficinia-v06-financeiro, feature/oficinia-v07-integridade, feature/oficinia-v08-cobranca-assistida, feature/oficinia-v09-independente, audit/oficinia-fases-1-3, feature/oficinia-v10-layout-mobile]
+    branches: [feature/oficinia-v06-financeiro, feature/oficinia-v07-integridade, feature/oficinia-v08-cobranca-assistida, feature/oficinia-v09-independente, audit/oficinia-fases-1-3, feature/oficinia-v10-layout-mobile, feature/ritmeia-v11-clientes]
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -23,7 +23,7 @@ jobs:
       - name: TypeScript strict typecheck
         run: bunx tsc --noEmit
       - name: Unit regressions - pagination, login isolation and payment retry
-        run: bun test tests/store.test.ts
+        run: bun test tests/store.test.ts tests/clientes-store.test.ts
       - name: ESLint completo dos arquivos alterados
         run: |
           bunx eslint src/routes/financeiro.tsx 'src/routes/ordem.$id.tsx' src/lib/oficina-store.ts
@@ -44,7 +44,7 @@ jobs:
 
 
   container:
-    if: github.ref == 'refs/heads/feature/oficinia-v09-independente' || github.ref == 'refs/heads/audit/oficinia-fases-1-3' || github.ref == 'refs/heads/feature/oficinia-v10-layout-mobile'
+    if: github.ref == 'refs/heads/feature/oficinia-v09-independente' || github.ref == 'refs/heads/audit/oficinia-fases-1-3' || github.ref == 'refs/heads/feature/oficinia-v10-layout-mobile' || github.ref == 'refs/heads/feature/ritmeia-v11-clientes'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -79,7 +79,7 @@ jobs:
 
 
   browser:
-    if: github.ref == 'refs/heads/audit/oficinia-fases-1-3' || github.ref == 'refs/heads/feature/oficinia-v10-layout-mobile'
+    if: github.ref == 'refs/heads/audit/oficinia-fases-1-3' || github.ref == 'refs/heads/feature/oficinia-v10-layout-mobile' || github.ref == 'refs/heads/feature/ritmeia-v11-clientes'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -145,6 +145,7 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20260927230000_oficinia_integridade.sql
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20260927233000_cobranca_assistida.sql
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20260928010000_auditoria_regressao.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20260928220000_clientes_equipamentos.sql
       - name: Verify numbering, permissions, RLS and payment rules
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/tests/phase2.sql
       - name: Verify assisted charges and explicit confirmation
@@ -155,3 +156,5 @@ jobs:
         run: bash supabase/tests/charge-concurrency.sh
       - name: Audit pending-charge invariants and retry safety
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/tests/audit-regressions.sql
+      - name: Verify reusable customers, equipment ownership and order links
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/tests/clientes-equipamentos.sql
