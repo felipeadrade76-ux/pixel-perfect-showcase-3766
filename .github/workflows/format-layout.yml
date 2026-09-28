@@ -1,7 +1,6 @@
 name: OficinIA - formatar layout (temporario)
 on:
-  push:
-    branches: [feature/oficinia-v10-layout-mobile]
+  workflow_dispatch:
 jobs:
   format:
     if: github.actor != 'github-actions[bot]'
