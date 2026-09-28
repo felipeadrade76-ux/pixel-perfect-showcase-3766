@@ -33,7 +33,6 @@ test("the login page fits a phone-sized Chromium viewport", async ({ page }) => 
   expect(overflowing).toBe(false);
 });
 
-
 test("Ritmeia stays light even when the device prefers dark mode", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "dark" });
   await page.setViewportSize({ width: 390, height: 844 });
