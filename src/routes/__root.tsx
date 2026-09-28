@@ -16,7 +16,9 @@ function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-md rounded-[28px] border border-border bg-card p-7 text-center shadow-[0_24px_70px_rgba(31,35,40,0.08)]">
-        <div className="mb-6 flex justify-center"><RitmeiaBrand /></div>
+        <div className="mb-6 flex justify-center">
+          <RitmeiaBrand />
+        </div>
         <h1 className="text-6xl font-black tracking-tight text-foreground">404</h1>
         <h2 className="mt-4 text-xl font-semibold text-foreground">Página não encontrada</h2>
         <p className="mt-2 text-sm text-muted-foreground">
