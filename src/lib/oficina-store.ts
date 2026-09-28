@@ -37,6 +37,8 @@ export type Ordem = {
   numero: string;
   revisao: number;
   cliente: string;
+  clienteId?: string | undefined;
+  equipamentoId?: string | undefined;
   telefone?: string | undefined;
   tipoMaquina: string;
   marca?: string | undefined;
@@ -61,6 +63,8 @@ type Row = {
   numero: string;
   revisao: number;
   cliente: string;
+  cliente_id: string | null;
+  equipamento_id: string | null;
   telefone: string | null;
   tipo_maquina: string;
   marca: string | null;
@@ -86,6 +90,8 @@ function fromRow(r: Row): Ordem {
     numero: r.numero,
     revisao: r.revisao,
     cliente: r.cliente,
+    clienteId: u(r.cliente_id),
+    equipamentoId: u(r.equipamento_id),
     telefone: u(r.telefone),
     tipoMaquina: r.tipo_maquina,
     marca: u(r.marca),
@@ -109,6 +115,8 @@ function toRow(o: Ordem) {
     id: o.id,
     numero: o.numero,
     cliente: o.cliente,
+    cliente_id: o.clienteId || null,
+    equipamento_id: o.equipamentoId || null,
     telefone: o.telefone || null,
     tipo_maquina: o.tipoMaquina,
     marca: o.marca || null,
@@ -256,6 +264,8 @@ export async function criarOrdem(
   dados: Pick<
     Ordem,
     | "cliente"
+    | "clienteId"
+    | "equipamentoId"
     | "telefone"
     | "tipoMaquina"
     | "marca"
