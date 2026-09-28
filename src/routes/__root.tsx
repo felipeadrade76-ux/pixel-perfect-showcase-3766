@@ -44,7 +44,9 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-md rounded-[28px] border border-border bg-card p-7 text-center shadow-[0_24px_70px_rgba(31,35,40,0.08)]">
-        <div className="mb-6 flex justify-center"><RitmeiaBrand /></div>
+        <div className="mb-6 flex justify-center">
+          <RitmeiaBrand />
+        </div>
         <h1 className="text-xl font-extrabold tracking-tight text-foreground">
           Não foi possível carregar esta página
         </h1>
