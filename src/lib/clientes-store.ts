@@ -282,10 +282,7 @@ export async function editarCliente(id: string, input: Partial<ClienteInput>): P
   return cliente;
 }
 
-export type EquipamentoInput = Omit<
-  Equipamento,
-  "id" | "criadoEm" | "atualizadoEm" | "clienteId"
->;
+export type EquipamentoInput = Omit<Equipamento, "id" | "criadoEm" | "atualizadoEm" | "clienteId">;
 
 function equipamentoPayload(
   clienteId: string,
