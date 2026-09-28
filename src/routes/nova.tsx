@@ -6,12 +6,12 @@ import { criarOrdem } from "@/lib/oficina-store";
 export const Route = createFileRoute("/nova")({
   head: () => ({
     meta: [
-      { title: "Nova entrada — Oficina Inteligente" },
+      { title: "Nova entrada — Ritmeia" },
       {
         name: "description",
         content: "Cadastro rápido de máquina recebida na oficina com ordem de serviço automática.",
       },
-      { property: "og:title", content: "Nova entrada — Oficina Inteligente" },
+      { property: "og:title", content: "Nova entrada — Ritmeia" },
       { property: "og:description", content: "Cadastro rápido de máquina recebida na oficina." },
     ],
   }),
@@ -86,8 +86,15 @@ function Nova() {
 
   return (
     <AppShell title="Nova entrada" subtitle="Cadastro rápido da máquina">
-      <form onSubmit={salvar} className="mx-auto max-w-2xl space-y-4">
-        <div>
+      <form onSubmit={salvar} className="mx-auto max-w-2xl space-y-5">
+        <section className="rounded-2xl border border-border bg-card p-4 shadow-[0_3px_14px_rgba(31,35,40,0.025)] sm:p-5">
+          <div className="mb-4">
+            <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-accent">
+              Dados principais
+            </p>
+            <h2 className="mt-1 text-lg font-extrabold tracking-tight">Recebimento da máquina</h2>
+          </div>
+          <div>
           <label className={rotulo}>Nome do cliente *</label>
           <input
             className={campo}
@@ -118,8 +125,17 @@ function Nova() {
           />
         </div>
 
-        <p className="pt-2 text-sm font-bold text-muted-foreground">Opcionais</p>
-        <div className="grid gap-4 sm:grid-cols-2">
+          </div>
+        </section>
+
+        <section className="rounded-2xl border border-border bg-card p-4 shadow-[0_3px_14px_rgba(31,35,40,0.025)] sm:p-5">
+          <div className="mb-4">
+            <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-accent">
+              Complementos
+            </p>
+            <h2 className="mt-1 text-lg font-extrabold tracking-tight">Informações opcionais</h2>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className={rotulo}>Telefone</label>
             <input
@@ -164,14 +180,15 @@ function Nova() {
               onChange={set("observacoes")}
             />
           </div>
-        </div>
+          </div>
+        </section>
 
         {erro ? <p className="text-sm font-semibold text-destructive">{erro}</p> : null}
 
         <button
           type="submit"
           disabled={salvando}
-          className="w-full rounded-2xl bg-accent px-4 py-4 text-lg font-bold text-accent-foreground active:opacity-90"
+          className="min-h-14 w-full rounded-2xl bg-accent px-4 py-4 text-base font-extrabold text-accent-foreground shadow-sm active:opacity-90"
         >
           {salvando ? "Salvando..." : "Salvar entrada"}
         </button>
