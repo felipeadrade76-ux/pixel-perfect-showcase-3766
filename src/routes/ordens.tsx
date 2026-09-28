@@ -8,12 +8,12 @@ import { STATUSES, atrasada, dataCurta, moeda, saldo, useOrdens } from "@/lib/of
 export const Route = createFileRoute("/ordens")({
   head: () => ({
     meta: [
-      { title: "Ordens de serviço — Oficina Inteligente" },
+      { title: "Ordens de serviço — Ritmeia" },
       {
         name: "description",
         content: "Pesquise, acompanhe e altere o status das ordens de serviço da oficina.",
       },
-      { property: "og:title", content: "Ordens de serviço — Oficina Inteligente" },
+      { property: "og:title", content: "Ordens de serviço — Ritmeia" },
       { property: "og:description", content: "Lista completa das ordens de serviço da oficina." },
     ],
   }),
@@ -77,10 +77,10 @@ function Ordens() {
             key={s}
             onClick={() => setFiltro(s)}
             aria-pressed={filtro === s}
-            className={`min-h-10 shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+            className={`min-h-11 shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
               filtro === s
-                ? "bg-primary text-primary-foreground"
-                : "bg-card text-muted-foreground border border-border"
+                ? "border border-accent/25 bg-accent/10 text-accent"
+                : "border border-border bg-card text-muted-foreground"
             }`}
           >
             {s}
