@@ -11,6 +11,7 @@ import { type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { RitmeiaBrand } from "@/components/RitmeiaBrand";
+import { PwaRegistration } from "@/components/PwaRegistration";
 
 function NotFoundComponent() {
   return (
@@ -87,6 +88,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:description", content: "Gestão de ordens de serviço da oficina." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "theme-color", content: "#1F2328" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
+      { name: "apple-mobile-web-app-title", content: "Ritmeia" },
     ],
     links: [
       {
@@ -94,6 +100,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
       { rel: "icon", href: "/ritmeia-mark.svg", type: "image/svg+xml" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
     ],
   }),
   shellComponent: RootShell,
@@ -121,6 +128,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <PwaRegistration />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
     </QueryClientProvider>
