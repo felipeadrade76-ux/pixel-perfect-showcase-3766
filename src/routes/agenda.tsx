@@ -6,12 +6,12 @@ import { atrasada, dataHora, useOrdens, type Ordem } from "@/lib/oficina-store";
 export const Route = createFileRoute("/agenda")({
   head: () => ({
     meta: [
-      { title: "Agenda — Oficina Inteligente" },
+      { title: "Agenda — Ritmeia" },
       {
         name: "description",
         content: "Previsões de conclusão, máquinas prontas para retirada e serviços concluídos.",
       },
-      { property: "og:title", content: "Agenda — Oficina Inteligente" },
+      { property: "og:title", content: "Agenda — Ritmeia" },
       { property: "og:description", content: "Agenda automática da oficina, sem cadastro manual." },
     ],
   }),
