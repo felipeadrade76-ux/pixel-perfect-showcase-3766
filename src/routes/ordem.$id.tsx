@@ -123,6 +123,15 @@ function Detalhe() {
               {editando ? "Fechar" : "Editar"}
             </button>
           </div>
+          {ordem.clienteId ? (
+            <Link
+              to="/cliente/$id"
+              params={{ id: ordem.clienteId }}
+              className="mb-3 inline-flex min-h-10 items-center rounded-xl bg-secondary px-3 text-xs font-bold text-accent"
+            >
+              Abrir cadastro e histórico do cliente
+            </Link>
+          ) : null}
           {editando ? (
             <EditarForm
               ordem={ordem}
@@ -405,13 +414,27 @@ function EditarForm({
 
   return (
     <div className="space-y-2">
-      <input className={campo} value={f.cliente} onChange={set("cliente")} placeholder="Cliente" />
-      <input
-        className={campo}
-        value={f.telefone}
-        onChange={set("telefone")}
-        placeholder="Telefone"
-      />
+      {ordem.clienteId ? (
+        <p className="rounded-xl bg-secondary/60 p-3 text-xs text-muted-foreground">
+          Nome e telefone vêm do cadastro mestre do cliente. Edite esses dados na ficha do cliente
+          para reutilizá-los nas próximas ordens.
+        </p>
+      ) : (
+        <>
+          <input
+            className={campo}
+            value={f.cliente}
+            onChange={set("cliente")}
+            placeholder="Cliente"
+          />
+          <input
+            className={campo}
+            value={f.telefone}
+            onChange={set("telefone")}
+            placeholder="Telefone"
+          />
+        </>
+      )}
       <div className="grid grid-cols-2 gap-2">
         <input className={campo} value={f.marca} onChange={set("marca")} placeholder="Marca" />
         <input className={campo} value={f.modelo} onChange={set("modelo")} placeholder="Modelo" />
@@ -428,8 +451,12 @@ function EditarForm({
       <button
         onClick={() =>
           onSalvar({
-            cliente: f.cliente.trim(),
-            telefone: f.telefone.trim() || undefined,
+            ...(ordem.clienteId
+              ? {}
+              : {
+                  cliente: f.cliente.trim(),
+                  telefone: f.telefone.trim() || undefined,
+                }),
             marca: f.marca.trim() || undefined,
             modelo: f.modelo.trim() || undefined,
             problema: f.problema.trim(),
