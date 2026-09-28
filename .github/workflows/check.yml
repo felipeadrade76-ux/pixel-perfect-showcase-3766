@@ -79,7 +79,7 @@ jobs:
 
 
   browser:
-    if: github.ref == 'refs/heads/audit/oficinia-fases-1-3'
+    if: github.ref == 'refs/heads/audit/oficinia-fases-1-3' || github.ref == 'refs/heads/feature/oficinia-v10-layout-mobile'
     runs-on: ubuntu-latest
     permissions:
       contents: read
