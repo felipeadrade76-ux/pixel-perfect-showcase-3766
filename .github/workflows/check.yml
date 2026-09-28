@@ -1,4 +1,4 @@
-name: OficinIA - verificacao do codigo
+name: Ritmeia - verificacao do codigo
 on:
   pull_request:
     branches: [main]
@@ -70,7 +70,7 @@ jobs:
             sleep 1
           done
           if [ "$ready" != 1 ]; then docker logs oficinia-independent-ci; exit 1; fi
-          grep -q 'OficinIA' /tmp/oficinia-container-home
+          grep -q 'Ritmeia' /tmp/oficinia-container-home
           curl --silent --show-error --fail http://127.0.0.1:4180/login -o /dev/null
           echo INDEPENDENT_DOCKER_DEPLOY_SMOKE_PASSED
       - name: Stop isolated container
@@ -102,7 +102,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: oficinia-browser-audit
+          name: ritmeia-browser-audit
           path: |
             test-results
             playwright-report
