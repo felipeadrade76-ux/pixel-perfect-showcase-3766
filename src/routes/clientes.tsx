@@ -107,7 +107,8 @@ function Clientes() {
             </p>
             <h2 className="mt-1 text-lg font-extrabold tracking-tight">Novo cliente</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Salve uma vez. Nas próximas ordens, basta selecionar o cliente para preencher os dados.
+              Salve uma vez. Nas próximas ordens, basta selecionar o cliente para preencher os
+              dados.
             </p>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <input
