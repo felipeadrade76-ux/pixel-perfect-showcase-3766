@@ -17,7 +17,7 @@ test("anonymous access redirects to login and invalid password shows a safe erro
 
   await page.goto("/ordens");
   await expect(page).toHaveURL(/\/login\?next=/);
-  await expect(page.getByRole("heading", { name: "Oficina Inteligente" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Ritmeia" })).toBeVisible();
 
   await page.locator('input[type="email"]').fill("invalido@example.com");
   await page.locator('input[type="password"]').fill("senha-incorreta");
