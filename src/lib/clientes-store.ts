@@ -207,7 +207,7 @@ export async function criarCliente(input: ClienteInput, requisicaoId = crypto.ra
   const versao = sessaoVersao;
   const { data, error } = await supabase
     .from("clientes")
-    .insert({ id: requisicaoId, ...clientePayload(input) })
+    .insert({ id: requisicaoId, ...clientePayload(input), nome: input.nome.trim() })
     .select("*")
     .single();
   let salva = data;
@@ -281,7 +281,12 @@ export async function criarEquipamento(
   const versao = sessaoVersao;
   const { data, error } = await supabase
     .from("equipamentos")
-    .insert({ id: requisicaoId, ...equipamentoPayload(clienteId, input) })
+    .insert({
+      id: requisicaoId,
+      ...equipamentoPayload(clienteId, input),
+      cliente_id: clienteId,
+      tipo: input.tipo.trim(),
+    })
     .select("*")
     .single();
   let salva = data;
