@@ -3,9 +3,8 @@ import { beforeEach, expect, mock, test } from "bun:test";
 let clientesRows: Record<string, unknown>[] = [];
 let equipamentosRows: Record<string, unknown>[] = [];
 let deferClientes = false;
-let finishClientes:
-  | ((response: { data: Record<string, unknown>[]; error: null }) => void)
-  | null = null;
+let finishClientes: ((response: { data: Record<string, unknown>[]; error: null }) => void) | null =
+  null;
 
 const cliente = (i: number) => ({
   id: `aaaaaaaa-aaaa-4aaa-8aaa-${String(i).padStart(12, "0")}`,
