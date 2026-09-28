@@ -63,7 +63,7 @@ function Agenda() {
             key={e.id}
             to="/ordem/$id"
             params={{ id: e.ordem.id }}
-            className="block rounded-2xl border border-border bg-card p-4 active:bg-secondary"
+            className="block rounded-2xl border border-border bg-card p-4 shadow-[0_3px_14px_rgba(31,35,40,0.025)] transition-colors hover:border-accent/35 hover:bg-secondary/30 active:bg-secondary sm:p-5"
           >
             <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
               <div className="min-w-0">
@@ -80,9 +80,12 @@ function Agenda() {
           </Link>
         ))}
         {eventos.length === 0 ? (
-          <p className="rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">
-            Nenhum compromisso na agenda.
-          </p>
+          <div className="rounded-2xl border border-dashed border-border bg-card p-6 text-sm text-muted-foreground">
+            <p className="font-semibold text-foreground">Agenda livre por enquanto.</p>
+            <p className="mt-1 text-xs">
+              Prazos, retiradas e entregas aparecem aqui automaticamente conforme as ordens avançam.
+            </p>
+          </div>
         ) : null}
       </div>
     </AppShell>
