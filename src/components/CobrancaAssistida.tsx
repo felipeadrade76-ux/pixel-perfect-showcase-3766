@@ -111,7 +111,7 @@ export function CobrancaAssistida({ ordem }: { ordem: Ordem }) {
     void executar(async () => {
       if (
         !window.confirm(
-          "Você conferiu o recebimento fora da OficinIA? Confirmar fará a baixa definitiva.",
+          "Você conferiu o recebimento fora da Ritmeia? Confirmar fará a baixa definitiva.",
         )
       )
         return;
@@ -139,10 +139,11 @@ export function CobrancaAssistida({ ordem }: { ordem: Ordem }) {
   }
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-4">
-      <h2 className="font-bold">Cobranças assistidas</h2>
+    <section className="rounded-2xl border border-border bg-card p-4 shadow-[0_3px_14px_rgba(31,35,40,0.025)] sm:p-5">
+      <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-accent">Recebimentos</p>
+      <h2 className="mt-1 font-extrabold tracking-tight">Cobranças assistidas</h2>
       <p className="mt-1 text-xs text-muted-foreground">
-        Sem conta bancária, chave Pix ou conexão com banco. A OficinIA organiza os pedidos; apenas a
+        Sem conta bancária, chave Pix ou conexão com banco. A Ritmeia organiza os pedidos; apenas a
         confirmação manual altera o valor recebido.
       </p>
       <div className="mt-4 grid grid-cols-2 gap-2">
@@ -194,7 +195,7 @@ export function CobrancaAssistida({ ordem }: { ordem: Ordem }) {
         <button
           type="button"
           onClick={() => setRecarregar((n) => n + 1)}
-          className="mt-2 rounded-lg border border-input px-3 py-2 text-xs font-semibold"
+          className="mt-2 min-h-11 rounded-xl border border-input px-3 py-2 text-xs font-semibold"
         >
           Atualizar cobranças
         </button>
@@ -226,7 +227,7 @@ export function CobrancaAssistida({ ordem }: { ordem: Ordem }) {
                 <button
                   disabled={ocupado}
                   onClick={() => void copiar(c)}
-                  className="rounded-lg border border-input px-3 py-2 text-xs font-semibold"
+                  className="min-h-11 rounded-xl border border-input px-3 py-2 text-xs font-semibold"
                 >
                   Copiar mensagem
                 </button>
@@ -234,7 +235,7 @@ export function CobrancaAssistida({ ordem }: { ordem: Ordem }) {
                   <button
                     disabled={ocupado}
                     onClick={() => transicao(c.id, "informado")}
-                    className="rounded-lg border border-input px-3 py-2 text-xs font-semibold"
+                    className="min-h-11 rounded-xl border border-input px-3 py-2 text-xs font-semibold"
                   >
                     Cliente avisou que pagou
                   </button>
@@ -242,14 +243,14 @@ export function CobrancaAssistida({ ordem }: { ordem: Ordem }) {
                 <button
                   disabled={ocupado}
                   onClick={() => confirmar(c.id)}
-                  className="rounded-lg bg-accent px-3 py-2 text-xs font-semibold text-accent-foreground"
+                  className="min-h-11 rounded-xl bg-accent px-3 py-2 text-xs font-semibold text-accent-foreground"
                 >
                   Confirmar após conferir
                 </button>
                 <button
                   disabled={ocupado}
                   onClick={() => transicao(c.id, "cancelado")}
-                  className="rounded-lg border border-destructive px-3 py-2 text-xs text-destructive"
+                  className="min-h-11 rounded-xl border border-destructive px-3 py-2 text-xs text-destructive"
                 >
                   Cancelar
                 </button>
