@@ -39,7 +39,8 @@ export const Route = createFileRoute("/ordem/$id")({
 
 const campo =
   "w-full rounded-xl border border-input bg-card px-3 py-3 text-base outline-none focus:border-accent";
-const bloco = "rounded-2xl border border-border bg-card p-4 shadow-[0_3px_14px_rgba(31,35,40,0.025)] sm:p-5";
+const bloco =
+  "rounded-2xl border border-border bg-card p-4 shadow-[0_3px_14px_rgba(31,35,40,0.025)] sm:p-5";
 
 function Detalhe() {
   const { id } = Route.useParams();
@@ -163,7 +164,9 @@ function Detalhe() {
           </p>
         ) : null}
         <section className={bloco}>
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-accent">Serviço</p>
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-accent">
+            Serviço
+          </p>
           <h2 className="mb-3 mt-1 font-extrabold tracking-tight">Peças e mão de obra</h2>
           <div className="space-y-2">
             {ordem.itens.map((i) => (
@@ -255,7 +258,9 @@ function Detalhe() {
         <CobrancaAssistida ordem={ordem} />
 
         <section className={bloco}>
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-accent">Financeiro</p>
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-accent">
+            Financeiro
+          </p>
           <h2 className="mb-3 mt-1 font-extrabold tracking-tight">Pagamentos</h2>
           {ordem.pagamentos.map((p) => (
             <div key={p.id} className="flex justify-between text-sm">
@@ -351,7 +356,9 @@ function Detalhe() {
         </section>
 
         <section className={bloco}>
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-accent">Linha do tempo</p>
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-accent">
+            Linha do tempo
+          </p>
           <h2 className="mb-3 mt-1 font-extrabold tracking-tight">Histórico automático</h2>
           <ol className="space-y-3">
             {[...ordem.historico].reverse().map((h, i) => (
