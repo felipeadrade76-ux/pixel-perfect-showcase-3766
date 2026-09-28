@@ -140,7 +140,9 @@ export function CobrancaAssistida({ ordem }: { ordem: Ordem }) {
 
   return (
     <section className="rounded-2xl border border-border bg-card p-4 shadow-[0_3px_14px_rgba(31,35,40,0.025)] sm:p-5">
-      <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-accent">Recebimentos</p>
+      <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-accent">
+        Recebimentos
+      </p>
       <h2 className="mt-1 font-extrabold tracking-tight">Cobranças assistidas</h2>
       <p className="mt-1 text-xs text-muted-foreground">
         Sem conta bancária, chave Pix ou conexão com banco. A Ritmeia organiza os pedidos; apenas a
