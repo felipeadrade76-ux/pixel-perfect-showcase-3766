@@ -1,12 +1,12 @@
-# Optional hosting blueprint for a separate test service. Import deliberately
-# through your own Render account; this file does not deploy anything by itself.
+# Optional staging blueprint. Import deliberately through the owner's Render account.
+# This file does not deploy anything by itself.
 services:
   - type: web
-    name: oficinia-homologacao
+    name: ritmeia-homologacao
     runtime: docker
-    branch: audit/oficinia-fases-1-3
+    branch: feature/ritmeia-v12-integracoes
     dockerfilePath: ./Dockerfile
-    healthCheckPath: /
+    healthCheckPath: /api/health
     envVars:
       - key: VITE_SUPABASE_URL
         sync: false
@@ -16,3 +16,7 @@ services:
         sync: false
       - key: SUPABASE_PUBLISHABLE_KEY
         sync: false
+      - key: NFSE_PROVIDER
+        value: disabled
+      - key: NFSE_AMBIENTE
+        value: homologacao
