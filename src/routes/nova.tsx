@@ -105,25 +105,25 @@ function Nova() {
               />
             </div>
             <div>
-          <label className={rotulo}>Tipo de máquina *</label>
-          <select className={campo} value={f.tipoMaquina} onChange={set("tipoMaquina")}>
-            <option value="">Selecione</option>
-            {tipos.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
+              <label className={rotulo}>Tipo de máquina *</label>
+              <select className={campo} value={f.tipoMaquina} onChange={set("tipoMaquina")}>
+                <option value="">Selecione</option>
+                {tipos.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
               <label className={rotulo}>Problema relatado *</label>
-          <textarea
-            className={campo}
-            rows={3}
-            value={f.problema}
-            onChange={set("problema")}
-            placeholder="O que o cliente relatou"
-          />
+              <textarea
+                className={campo}
+                rows={3}
+                value={f.problema}
+                onChange={set("problema")}
+                placeholder="O que o cliente relatou"
+              />
             </div>
           </div>
         </section>
@@ -136,7 +136,7 @@ function Nova() {
             <h2 className="mt-1 text-lg font-extrabold tracking-tight">Informações opcionais</h2>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-          <div>
+            <div>
             <label className={rotulo}>Telefone</label>
             <input
               className={campo}
@@ -144,12 +144,12 @@ function Nova() {
               value={f.telefone}
               onChange={set("telefone")}
             />
-          </div>
-          <div>
-            <label className={rotulo}>Prazo de conclusão</label>
-            <input className={campo} type="date" value={f.prazo} onChange={set("prazo")} />
-          </div>
-          <div>
+            </div>
+            <div>
+              <label className={rotulo}>Prazo de conclusão</label>
+              <input className={campo} type="date" value={f.prazo} onChange={set("prazo")} />
+            </div>
+            <div>
             <label className={rotulo}>Marca</label>
             <input
               className={campo}
