@@ -1,9 +1,10 @@
 import { Link } from "@tanstack/react-router";
-import { Home, ClipboardList, CalendarDays, Wallet, Plus, Wrench, LogOut } from "lucide-react";
+import { Home, ClipboardList, CalendarDays, Wallet, Plus, LogOut } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { loadOrdens, limparOrdens, selecionarUsuario } from "@/lib/oficina-store";
 import { supabase } from "@/integrations/supabase/client";
+import { RitmeiaBrand, RitmeiaSymbol } from "@/components/RitmeiaBrand";
 
 const nav = [
   { to: "/", label: "Início", icon: Home },
@@ -83,19 +84,9 @@ export function AppShell({
         <Link
           to="/"
           className="flex items-center gap-3 rounded-2xl px-3 py-3"
-          aria-label="OficinIA — ir para o início"
+          aria-label="Ritmeia — ir para o início"
         >
-          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sidebar-primary text-sidebar-primary-foreground">
-            <Wrench className="h-6 w-6" strokeWidth={2.5} />
-          </span>
-          <span className="min-w-0">
-            <span className="block text-xl font-extrabold tracking-tight">
-              Oficin<span className="text-sidebar-primary">IA</span>
-            </span>
-            <span className="block text-[11px] font-medium tracking-[0.15em] text-sidebar-foreground/60">
-              GESTÃO DE OFICINA
-            </span>
-          </span>
+          <RitmeiaBrand />
         </Link>
         <p className="mb-3 mt-10 px-4 text-[11px] font-bold uppercase tracking-[0.15em] text-sidebar-foreground/50">
           Área de trabalho
@@ -134,12 +125,12 @@ export function AppShell({
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-10 border-b border-border bg-card/95 px-4 py-3 backdrop-blur-lg sm:px-6 md:px-8 md:py-5">
           <div className="mx-auto flex w-full max-w-6xl items-center gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground md:hidden">
-              <Wrench className="h-5 w-5" />
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-foreground md:hidden">
+              <RitmeiaSymbol className="h-7 w-7" />
             </span>
             <div className="min-w-0 flex-1">
               <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-accent md:hidden">
-                OficinIA
+                Ritmeia
               </p>
               <h1 className="truncate text-lg font-extrabold tracking-tight text-foreground sm:text-xl md:text-2xl">
                 {title}
