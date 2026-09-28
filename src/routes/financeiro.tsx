@@ -6,7 +6,7 @@ import { AppShell } from "@/components/AppShell";
 import { moeda, pago, saldo, total, useOrdens } from "@/lib/oficina-store";
 
 export const Route = createFileRoute("/financeiro")({
-  head: () => ({ meta: [{ title: "Financeiro — OficinIA" }] }),
+  head: () => ({ meta: [{ title: "Financeiro — Ritmeia" }] }),
   component: Financeiro,
 });
 const mesDeData = (date: Date) =>
