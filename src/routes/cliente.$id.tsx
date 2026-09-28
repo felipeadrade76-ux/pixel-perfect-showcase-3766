@@ -10,6 +10,7 @@ import {
   editarEquipamento,
   useCliente,
   useEquipamentos,
+  type Cliente,
   type ClienteInput,
   type Equipamento,
   type EquipamentoInput,
@@ -228,7 +229,7 @@ function ClienteDetalhe() {
   );
 }
 
-function Info({ label, valor }: { label: string; valor?: string }) {
+function Info({ label, valor }: { label: string; valor?: string | undefined }) {
   return (
     <div className="rounded-xl bg-secondary/55 p-3">
       <p className="text-xs text-muted-foreground">{label}</p>
@@ -242,7 +243,7 @@ function ClienteForm({
   ocupado,
   onSalvar,
 }: {
-  cliente: ReturnType<typeof useCliente> extends infer T ? NonNullable<T> : never;
+  cliente: Cliente;
   ocupado: boolean;
   onSalvar: (dados: Partial<ClienteInput>) => Promise<void>;
 }) {
@@ -263,7 +264,7 @@ function ClienteForm({
 
   return (
     <div className="mt-4 grid gap-3 sm:grid-cols-2">
-      {[
+      {([
         ["nome", "Nome ou razão social"],
         ["telefone", "Telefone"],
         ["documento", "CPF ou CNPJ"],
@@ -275,7 +276,7 @@ function ClienteForm({
         ["bairro", "Bairro"],
         ["cidade", "Cidade"],
         ["uf", "UF"],
-      ].map(([key, label]) => (
+      ] as const).map(([key, label]) => (
         <label key={key}>
           <span className="mb-1 block text-xs font-semibold text-muted-foreground">{label}</span>
           <input
