@@ -43,7 +43,9 @@ function Ordens() {
     <AppShell title="Ordens de serviço" subtitle={`${lista.length} ordem(ns) listada(s)`}>
       <div className="mb-5 flex items-center justify-between gap-3">
         <div>
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.15em] text-accent">Controle de serviços</p>
+          <p className="text-[11px] font-extrabold uppercase tracking-[0.15em] text-accent">
+            Controle de serviços
+          </p>
           <h2 className="mt-1 text-xl font-extrabold tracking-tight text-foreground">
             {lista.length} {lista.length === 1 ? "ordem encontrada" : "ordens encontradas"}
           </h2>
@@ -66,8 +68,10 @@ function Ordens() {
         />
       </div>
 
-      <div aria-label="Filtrar ordens por status"
-      className="-mx-4 mb-5 flex gap-2 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0">
+      <div
+        aria-label="Filtrar ordens por status"
+        className="-mx-4 mb-5 flex gap-2 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0"
+      >
         {["Todas", ...STATUSES].map((s) => (
           <button
             key={s}
@@ -109,7 +113,10 @@ function Ordens() {
                   Previsão {dataCurta(o.prazo)}
                 </span>
               ) : null}
-              <ChevronRight aria-hidden="true" className="ml-auto h-4 w-4 text-muted-foreground group-hover:text-accent" />
+              <ChevronRight
+                aria-hidden="true"
+                className="ml-auto h-4 w-4 text-muted-foreground group-hover:text-accent"
+              />
               {saldo(o) > 0 ? (
                 <span className="text-destructive">Saldo {moeda(saldo(o))}</span>
               ) : null}
@@ -120,7 +127,9 @@ function Ordens() {
           <p className="rounded-2xl border border-border bg-card p-4 text-sm text-muted-foreground">
             <ClipboardList className="mb-3 h-8 w-8 text-muted-foreground/60" />
             <span className="block font-semibold">Nenhuma ordem encontrada.</span>
-            <span className="mt-1 block text-xs">Experimente outro filtro ou cadastre uma nova ordem.</span>
+            <span className="mt-1 block text-xs">
+              Experimente outro filtro ou cadastre uma nova ordem.
+            </span>
           </p>
         ) : null}
       </div>
