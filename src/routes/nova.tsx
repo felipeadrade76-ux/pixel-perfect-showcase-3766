@@ -364,9 +364,12 @@ function Nova() {
                 className="mt-1 h-4 w-4 accent-[var(--color-accent)]"
               />
               <span>
-                <span className="block text-sm font-bold">Salvar máquina no cadastro do cliente</span>
+                <span className="block text-sm font-bold">
+                  Salvar máquina no cadastro do cliente
+                </span>
                 <span className="block text-xs text-muted-foreground">
-                  Na próxima visita, tipo, marca, modelo e série poderão ser preenchidos com um toque.
+                  Na próxima visita, tipo, marca, modelo e série poderão ser preenchidos com um
+                  toque.
                 </span>
               </span>
             </label>
