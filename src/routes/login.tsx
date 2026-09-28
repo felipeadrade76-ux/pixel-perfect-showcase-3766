@@ -73,7 +73,10 @@ function Login() {
 
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background p-4">
-      <div aria-hidden="true" className="absolute -left-20 top-16 h-64 w-64 rounded-full bg-accent/8 blur-3xl" />
+      <div
+        aria-hidden="true"
+        className="absolute -left-20 top-16 h-64 w-64 rounded-full bg-accent/8 blur-3xl"
+      />
       <div className="relative w-full max-w-sm rounded-[28px] border border-border bg-card p-6 text-card-foreground shadow-[0_24px_70px_rgba(31,35,40,0.10)] sm:p-7">
         <div className="mb-7">
           <RitmeiaBrand />
