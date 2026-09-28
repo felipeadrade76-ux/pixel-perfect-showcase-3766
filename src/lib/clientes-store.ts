@@ -122,11 +122,19 @@ const EMPTY_CLIENTES: Cliente[] = [];
 const EMPTY_EQUIPAMENTOS: Equipamento[] = [];
 
 export function useClientes() {
-  return useSyncExternalStore(subscribe, () => clientes, () => EMPTY_CLIENTES);
+  return useSyncExternalStore(
+    subscribe,
+    () => clientes,
+    () => EMPTY_CLIENTES,
+  );
 }
 
 export function useEquipamentos() {
-  return useSyncExternalStore(subscribe, () => equipamentos, () => EMPTY_EQUIPAMENTOS);
+  return useSyncExternalStore(
+    subscribe,
+    () => equipamentos,
+    () => EMPTY_EQUIPAMENTOS,
+  );
 }
 
 export function useCliente(id: string) {
@@ -149,10 +157,7 @@ export function selecionarUsuarioClientes(id: string): boolean {
   return true;
 }
 
-async function carregarTabela<T>(
-  tabela: "clientes" | "equipamentos",
-  ordem: string,
-): Promise<T[]> {
+async function carregarTabela<T>(tabela: "clientes" | "equipamentos", ordem: string): Promise<T[]> {
   const pagina = 500;
   const todas: T[] = [];
   for (let inicio = 0; ; inicio += pagina) {
@@ -220,7 +225,10 @@ function clientePayload(
   return payload;
 }
 
-export async function criarCliente(input: ClienteInput, requisicaoId = crypto.randomUUID()): Promise<Cliente> {
+export async function criarCliente(
+  input: ClienteInput,
+  requisicaoId = crypto.randomUUID(),
+): Promise<Cliente> {
   if (!input.nome.trim()) throw new Error("Informe o nome do cliente.");
   validarDadosFiscais(input);
   const usuario = usuarioAtivo;
