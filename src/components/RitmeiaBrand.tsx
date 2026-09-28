@@ -1,9 +1,6 @@
 import type { SVGProps } from "react";
 
-export function RitmeiaSymbol({
-  className = "h-10 w-10",
-  ...props
-}: SVGProps<SVGSVGElement>) {
+export function RitmeiaSymbol({ className = "h-10 w-10", ...props }: SVGProps<SVGSVGElement>) {
   return (
     <svg
       viewBox="0 0 64 64"
@@ -49,7 +46,13 @@ export function RitmeiaBrand({
   return (
     <span className={"inline-flex items-center gap-2.5 " + className}>
       <RitmeiaSymbol className={compact ? "h-8 w-8 shrink-0" : "h-10 w-10 shrink-0"} />
-      <span className={compact ? "text-lg font-black tracking-[-0.04em]" : "text-2xl font-black tracking-[-0.045em]"}>
+      <span
+        className={
+          compact
+            ? "text-lg font-black tracking-[-0.04em]"
+            : "text-2xl font-black tracking-[-0.045em]"
+        }
+      >
         Ritmeia
       </span>
     </span>
