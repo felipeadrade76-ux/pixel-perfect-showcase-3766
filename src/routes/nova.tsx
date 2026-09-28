@@ -137,49 +137,49 @@ function Nova() {
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-            <label className={rotulo}>Telefone</label>
-            <input
-              className={campo}
-              inputMode="tel"
-              value={f.telefone}
-              onChange={set("telefone")}
-            />
+              <label className={rotulo}>Telefone</label>
+              <input
+                className={campo}
+                inputMode="tel"
+                value={f.telefone}
+                onChange={set("telefone")}
+              />
             </div>
             <div>
               <label className={rotulo}>Prazo de conclusão</label>
               <input className={campo} type="date" value={f.prazo} onChange={set("prazo")} />
             </div>
             <div>
-            <label className={rotulo}>Marca</label>
-            <input
-              className={campo}
-              value={f.marca}
-              onChange={set("marca")}
-              placeholder="Texto livre"
-            />
-          </div>
-          <div>
-            <label className={rotulo}>Modelo</label>
-            <input
-              className={campo}
-              value={f.modelo}
-              onChange={set("modelo")}
-              placeholder="Texto livre"
-            />
-          </div>
-          <div className="sm:col-span-2">
-            <label className={rotulo}>Número de série</label>
-            <input className={campo} value={f.serie} onChange={set("serie")} />
-          </div>
-          <div className="sm:col-span-2">
-            <label className={rotulo}>Observações</label>
-            <textarea
-              className={campo}
-              rows={2}
-              value={f.observacoes}
-              onChange={set("observacoes")}
-            />
-          </div>
+              <label className={rotulo}>Marca</label>
+              <input
+                className={campo}
+                value={f.marca}
+                onChange={set("marca")}
+                placeholder="Texto livre"
+              />
+            </div>
+            <div>
+              <label className={rotulo}>Modelo</label>
+              <input
+                className={campo}
+                value={f.modelo}
+                onChange={set("modelo")}
+                placeholder="Texto livre"
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label className={rotulo}>Número de série</label>
+              <input className={campo} value={f.serie} onChange={set("serie")} />
+            </div>
+            <div className="sm:col-span-2">
+              <label className={rotulo}>Observações</label>
+              <textarea
+                className={campo}
+                rows={2}
+                value={f.observacoes}
+                onChange={set("observacoes")}
+              />
+            </div>
           </div>
         </section>
 
