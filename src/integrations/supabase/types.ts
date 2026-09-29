@@ -65,6 +65,75 @@ export type Database = {
         };
         Relationships: [];
       };
+      documentos_fiscais: {
+        Row: {
+          id: string;
+          user_id: string;
+          ordem_id: string;
+          cliente_id: string;
+          status: string;
+          ambiente: string;
+          provedor: string;
+          valor_servicos: number;
+          tomador: Json;
+          servico: Json;
+          numero_nfse: string | null;
+          codigo_verificacao: string | null;
+          protocolo: string | null;
+          xml_url: string | null;
+          pdf_url: string | null;
+          erro_codigo: string | null;
+          erro_mensagem: string | null;
+          criado_em: string;
+          atualizado_em: string;
+          emitido_em: string | null;
+        };
+        Insert: {
+          id: string;
+          user_id?: string;
+          ordem_id: string;
+          cliente_id: string;
+          status?: string;
+          ambiente?: string;
+          provedor?: string;
+          valor_servicos: number;
+          tomador: Json;
+          servico: Json;
+          numero_nfse?: string | null;
+          codigo_verificacao?: string | null;
+          protocolo?: string | null;
+          xml_url?: string | null;
+          pdf_url?: string | null;
+          erro_codigo?: string | null;
+          erro_mensagem?: string | null;
+          criado_em?: string;
+          atualizado_em?: string;
+          emitido_em?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          ordem_id?: string;
+          cliente_id?: string;
+          status?: string;
+          ambiente?: string;
+          provedor?: string;
+          valor_servicos?: number;
+          tomador?: Json;
+          servico?: Json;
+          numero_nfse?: string | null;
+          codigo_verificacao?: string | null;
+          protocolo?: string | null;
+          xml_url?: string | null;
+          pdf_url?: string | null;
+          erro_codigo?: string | null;
+          erro_mensagem?: string | null;
+          criado_em?: string;
+          atualizado_em?: string;
+          emitido_em?: string | null;
+        };
+        Relationships: [];
+      };
       equipamentos: {
         Row: {
           id: string;
@@ -238,6 +307,10 @@ export type Database = {
       oficinia_registrar_pagamento: {
         Args: { p_ordem: string; p_pagamento_id: string; p_valor: number; p_forma: string };
         Returns: Database["public"]["Tables"]["ordens"]["Row"];
+      };
+      ritmeia_preparar_nfse: {
+        Args: { p_ordem: string; p_documento_id: string; p_ambiente?: string };
+        Returns: Database["public"]["Tables"]["documentos_fiscais"]["Row"];
       };
     };
     Enums: {
