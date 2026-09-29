@@ -147,6 +147,7 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20260927233000_cobranca_assistida.sql
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20260928010000_auditoria_regressao.sql
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20260928220000_clientes_equipamentos.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20260929010000_preparacao_nfse.sql
       - name: Verify numbering, permissions, RLS and payment rules
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/tests/phase2.sql
       - name: Verify assisted charges and explicit confirmation
@@ -159,3 +160,5 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/tests/audit-regressions.sql
       - name: Verify reusable customers, equipment ownership and order links
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/tests/clientes-equipamentos.sql
+      - name: Verify NFS-e draft snapshots and fiscal RLS
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/tests/nfse-preparation.sql
