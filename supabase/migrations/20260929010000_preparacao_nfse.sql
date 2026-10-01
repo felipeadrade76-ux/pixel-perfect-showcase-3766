@@ -24,6 +24,8 @@ CREATE TABLE public.documentos_fiscais (
     CHECK (ambiente IN ('homologacao','producao')),
   provedor text NOT NULL DEFAULT 'nao_configurado',
   valor_servicos numeric(14,2) NOT NULL CHECK (valor_servicos >= 0),
+  valor_pecas numeric(14,2) NOT NULL DEFAULT 0 CHECK (valor_pecas >= 0),
+  valor_total_ordem numeric(14,2) NOT NULL CHECK (valor_total_ordem >= 0),
   tomador jsonb NOT NULL,
   servico jsonb NOT NULL,
   numero_nfse text,
@@ -78,6 +80,8 @@ DECLARE
   v_ordem public.ordens%ROWTYPE;
   v_cliente public.clientes%ROWTYPE;
   v_total numeric(14,2);
+  v_pecas numeric(14,2);
+  v_total_ordem numeric(14,2);
   v_doc public.documentos_fiscais%ROWTYPE;
 BEGIN
   IF auth.uid() IS NULL THEN
@@ -117,6 +121,13 @@ BEGIN
   FROM jsonb_array_elements(v_ordem.itens) AS item
   WHERE item->>'tipo' = 'Mão de obra';
 
+  SELECT coalesce(sum((item->>'valor')::numeric), 0)
+    INTO v_pecas
+  FROM jsonb_array_elements(v_ordem.itens) AS item
+  WHERE item->>'tipo' = 'Peça';
+
+  v_total_ordem := v_total + v_pecas;
+
   IF v_total <= 0 THEN
     RAISE EXCEPTION 'A ordem precisa ter mao de obra com valor antes de preparar a NFS-e';
   END IF;
@@ -142,6 +153,8 @@ BEGIN
     ambiente,
     provedor,
     valor_servicos,
+    valor_pecas,
+    valor_total_ordem,
     tomador,
     servico
   ) VALUES (
@@ -153,6 +166,8 @@ BEGIN
     p_ambiente,
     'nao_configurado',
     v_total,
+    v_pecas,
+    v_total_ordem,
     jsonb_build_object(
       'nome', v_cliente.nome,
       'documento', v_cliente.documento,
