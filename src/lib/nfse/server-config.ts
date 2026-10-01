@@ -20,7 +20,9 @@ export function getNfseServerConfig() {
     ? (rawAmbiente as NfseAmbiente)
     : "homologacao";
 
-  const cnpj = env("NFSE_CNPJ")?.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  const cnpj = env("NFSE_CNPJ")
+    ?.toUpperCase()
+    .replace(/[^A-Z0-9]/g, "");
   const municipioIbge = env("NFSE_MUNICIPIO_IBGE")?.replace(/\D/g, "");
   const inscricaoMunicipal = env("NFSE_INSCRICAO_MUNICIPAL");
   const apiBaseUrl = env("NFSE_API_BASE_URL");
@@ -61,11 +63,7 @@ export function getNfseServerConfig() {
   const enabled = provider !== "disabled";
   const supported = provider === "nacional";
   const ready =
-    enabled &&
-    supported &&
-    missing.length === 0 &&
-    invalid.length === 0 &&
-    !productionBlocked;
+    enabled && supported && missing.length === 0 && invalid.length === 0 && !productionBlocked;
 
   return {
     provider,
