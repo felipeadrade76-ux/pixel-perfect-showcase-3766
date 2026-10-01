@@ -41,10 +41,23 @@ SELECT public.ritmeia_preparar_nfse(
 );
 
 DO $
-DECLARE v_status text; v_total numeric; v_nome text; v_os text; v_count integer;
+DECLARE
+  v_status text;
+  v_total numeric;
+  v_pecas numeric;
+  v_total_ordem numeric;
+  v_nome text;
+  v_os text;
+  v_count integer;
 BEGIN
-  SELECT status, valor_servicos, tomador->>'nome', servico->>'numero_os'
-    INTO v_status, v_total, v_nome, v_os
+  SELECT
+    status,
+    valor_servicos,
+    valor_pecas,
+    valor_total_ordem,
+    tomador->>'nome',
+    servico->>'numero_os'
+    INTO v_status, v_total, v_pecas, v_total_ordem, v_nome, v_os
   FROM public.documentos_fiscais
   WHERE id='f1000000-0000-4000-8000-000000000004';
 
@@ -53,7 +66,12 @@ BEGIN
   WHERE ordem_id='f1000000-0000-4000-8000-000000000002'
     AND status='rascunho';
 
-  IF v_status <> 'rascunho' OR v_total <> 150 OR v_nome <> 'Cliente Fiscal' OR v_os IS NULL THEN
+  IF v_status <> 'rascunho'
+    OR v_total <> 150
+    OR v_pecas <> 50
+    OR v_total_ordem <> 200
+    OR v_nome <> 'Cliente Fiscal'
+    OR v_os IS NULL THEN
     RAISE EXCEPTION 'Fiscal snapshot was not prepared correctly';
   END IF;
   IF v_count <> 1 THEN
