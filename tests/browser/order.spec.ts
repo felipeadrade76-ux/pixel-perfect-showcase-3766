@@ -164,6 +164,7 @@ test("an authenticated user can create an OS and reopen it in a mobile viewport"
         valor_servicos: 100,
         valor_pecas: 0,
         valor_total_ordem: 100,
+        ordem_revisao: Number(saved?.revisao ?? 0),
         tomador: { nome: "Cliente de teste" },
         servico: { numero_os: "OS-0001" },
         numero_nfse: null,
