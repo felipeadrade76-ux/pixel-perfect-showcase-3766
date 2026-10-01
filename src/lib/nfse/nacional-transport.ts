@@ -83,6 +83,30 @@ function isSuccess(value: unknown): value is NfseNacionalSuccess {
   );
 }
 
+export function parseNfseResponse(status: number, raw: string): NfseNacionalResult {
+  const parsed = parseJson(raw);
+
+  if (status >= 200 && status < 300 && isSuccess(parsed)) {
+    return {
+      ok: true,
+      status,
+      data: parsed,
+      xml: gunzipBase64Xml(parsed.nfseXmlGZipB64),
+    };
+  }
+
+  return {
+    ok: false,
+    status,
+    retryable: status === 0 || status === 408 || status === 429 || status >= 500,
+    data:
+      parsed && typeof parsed === "object" && !Array.isArray(parsed)
+        ? (parsed as NfseNacionalRejected)
+        : null,
+    raw,
+  };
+}
+
 export async function postSignedDps(options: {
   baseUrl: string;
   signedDpsXml: string;
@@ -126,32 +150,11 @@ export async function postSignedDps(options: {
         res.on("end", () => {
           const status = res.statusCode ?? 0;
           const raw = Buffer.concat(chunks).toString("utf8");
-          const parsed = parseJson(raw);
-
-          if (status >= 200 && status < 300 && isSuccess(parsed)) {
-            try {
-              resolve({
-                ok: true,
-                status,
-                data: parsed,
-                xml: gunzipBase64Xml(parsed.nfseXmlGZipB64),
-              });
-            } catch (error) {
-              reject(error);
-            }
-            return;
+          try {
+            resolve(parseNfseResponse(status, raw));
+          } catch (error) {
+            reject(error);
           }
-
-          resolve({
-            ok: false,
-            status,
-            retryable: status === 0 || status === 408 || status === 429 || status >= 500,
-            data:
-              parsed && typeof parsed === "object" && !Array.isArray(parsed)
-                ? (parsed as NfseNacionalRejected)
-                : null,
-            raw,
-          });
         });
       },
     );
