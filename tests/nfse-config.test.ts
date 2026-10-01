@@ -89,3 +89,15 @@ test("invalid municipality or non-HTTPS API cannot become ready", () => {
   expect(config.invalid).toContain("NFSE_MUNICIPIO_IBGE");
   expect(config.invalid).toContain("NFSE_API_BASE_URL");
 });
+
+
+test("municipal provider stays blocked until a concrete adapter exists", () => {
+  clear();
+  validHomologation();
+  process.env.NFSE_PROVIDER = "municipal";
+  const config = getNfseServerConfig();
+  expect(config.enabled).toBe(true);
+  expect(config.supported).toBe(false);
+  expect(config.ready).toBe(false);
+  expect(config.missing).toContain("NFSE_MUNICIPAL_ADAPTER");
+});
