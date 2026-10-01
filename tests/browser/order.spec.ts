@@ -160,6 +160,8 @@ test("an authenticated user can create an OS and reopen it in a mobile viewport"
         ambiente: "homologacao",
         provedor: "nao_configurado",
         valor_servicos: 100,
+        valor_pecas: 0,
+        valor_total_ordem: 100,
         tomador: { nome: "Cliente de teste" },
         servico: { numero_os: "OS-0001" },
         numero_nfse: null,
@@ -268,6 +270,8 @@ test("an authenticated user can create an OS and reopen it in a mobile viewport"
   const fiscal = page.locator("section").filter({ has: page.getByRole("heading", { name: "NFS-e" }) });
   await fiscal.getByRole("button", { name: "Preparar NFS-e" }).click();
   await expect(fiscal).toContainText("Rascunho fiscal preparado");
+  await expect(fiscal).toContainText("Serviços: R$ 100,00");
+  await expect(fiscal).toContainText("Peças separadas: R$ 0,00");
   await expect(fiscal).toContainText("Homologação");
   await expect(fiscal.getByRole("button", { name: /Emitir NFS-e/ })).toBeDisabled();
 
