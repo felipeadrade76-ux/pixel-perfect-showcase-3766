@@ -38,7 +38,7 @@ export function getNfseServerConfig() {
     ["NFSE_CERT_PASSWORD", certificatePassword],
   ] as const;
 
-  const missing =
+  const missing: string[] =
     provider === "disabled" ? [] : required.filter(([, value]) => !value).map(([key]) => key);
 
   if (provider === "municipal") {
