@@ -27,10 +27,12 @@ export async function prepararNfse(ordemId: string, documentoId: string): Promis
   if (error || !data) {
     const message = error?.message ?? "";
     if (message.includes("Complete CPF/CNPJ")) {
-      throw new Error("Complete CPF/CNPJ e cidade/UF no cadastro do cliente antes de preparar a NFS-e.");
+      throw new Error(
+        "Complete CPF/CNPJ e cidade/UF no cadastro do cliente antes de preparar a NFS-e.",
+      );
     }
-    if (message.includes("valor de servico")) {
-      throw new Error("Adicione um valor de serviço à ordem antes de preparar a NFS-e.");
+    if (message.includes("mao de obra")) {
+      throw new Error("Adicione mão de obra com valor à ordem antes de preparar a NFS-e.");
     }
     if (message.includes("cliente cadastrado")) {
       throw new Error("Vincule esta ordem a um cliente cadastrado antes de preparar a NFS-e.");
