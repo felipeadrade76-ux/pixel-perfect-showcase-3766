@@ -16,7 +16,7 @@ INSERT INTO public.clientes (
 ) VALUES (
   'f1000000-0000-4000-8000-000000000001',
   'Cliente Fiscal',
-  '12345678901',
+  '98765432109',
   'Itajuba',
   'MG',
   'fiscal@example.com'
