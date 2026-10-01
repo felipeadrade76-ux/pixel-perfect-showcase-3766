@@ -121,6 +121,18 @@ BEGIN
     RAISE EXCEPTION 'A ordem precisa ter mao de obra com valor antes de preparar a NFS-e';
   END IF;
 
+  SELECT * INTO v_doc
+  FROM public.documentos_fiscais
+  WHERE user_id = auth.uid()
+    AND ordem_id = v_ordem.id
+    AND status IN ('rascunho','pronto','enviando')
+  ORDER BY criado_em DESC
+  LIMIT 1;
+
+  IF v_doc.id IS NOT NULL THEN
+    RETURN v_doc;
+  END IF;
+
   INSERT INTO public.documentos_fiscais (
     id,
     user_id,
@@ -175,9 +187,14 @@ BEGIN
     IF v_doc.id IS NULL THEN
       RAISE EXCEPTION 'Nao foi possivel recuperar o rascunho fiscal';
     END IF;
+
+    IF v_doc.ordem_id <> v_ordem.id OR v_doc.ambiente <> p_ambiente THEN
+      RAISE EXCEPTION 'Identificador fiscal ja utilizado em outra preparacao';
+    END IF;
   END IF;
 
   RETURN v_doc;
-END $$;
+END $;
 
+REVOKE ALL ON FUNCTION public.ritmeia_preparar_nfse(uuid,uuid,text) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.ritmeia_preparar_nfse(uuid,uuid,text) TO authenticated;
