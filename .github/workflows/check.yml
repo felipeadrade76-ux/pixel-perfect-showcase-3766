@@ -23,7 +23,7 @@ jobs:
       - name: TypeScript strict typecheck
         run: bunx tsc --noEmit
       - name: Unit regressions - pagination, login isolation and payment retry
-        run: bun test tests/store.test.ts tests/clientes-store.test.ts
+        run: bun test tests/store.test.ts tests/clientes-store.test.ts tests/nfse-config.test.ts
       - name: ESLint completo dos arquivos alterados
         run: |
           bunx eslint src/routes/financeiro.tsx 'src/routes/ordem.$id.tsx' src/lib/oficina-store.ts
