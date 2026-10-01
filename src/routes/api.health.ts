@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { nfsePublicReadiness } from "@/lib/nfse/server-config";
 
 export const Route = createFileRoute("/api/health")({
   server: {
@@ -13,10 +12,11 @@ export const Route = createFileRoute("/api/health")({
           {
             ok: supabaseConfigured,
             service: "ritmeia",
-            supabaseConfigured,
-            nfse: nfsePublicReadiness(),
           },
-          { status: supabaseConfigured ? 200 : 503 },
+          {
+            status: supabaseConfigured ? 200 : 503,
+            headers: { "Cache-Control": "no-store" },
+          },
         );
       },
     },
