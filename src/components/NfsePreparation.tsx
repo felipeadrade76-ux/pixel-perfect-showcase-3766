@@ -76,9 +76,11 @@ export function NfsePreparation({ ordem }: { ordem: Ordem }) {
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
               <p className="font-bold">Rascunho fiscal preparado</p>
-              <p className="text-xs text-muted-foreground">
-                {resumoTomador(atual)} · {moeda(Number(atual.valor_servicos))}
-              </p>
+              <p className="text-xs text-muted-foreground">{resumoTomador(atual)}</p>
+              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                <span>Serviços: {moeda(Number(atual.valor_servicos))}</span>
+                <span>Peças separadas: {moeda(Number(atual.valor_pecas))}</span>
+              </div>
             </div>
             <span className="rounded-full bg-warning/15 px-2.5 py-1 text-xs font-bold text-warning-foreground">
               Homologação
@@ -87,6 +89,8 @@ export function NfsePreparation({ ordem }: { ordem: Ordem }) {
           <p className="mt-3 flex items-start gap-2 text-xs text-muted-foreground">
             <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-success" />
             Os dados deste rascunho ficam preservados mesmo se o cadastro do cliente mudar depois.
+            Peças ficam separadas da mão de obra para a regra fiscal correta ser aplicada pelo
+            emissor configurado.
           </p>
           <button
             type="button"
