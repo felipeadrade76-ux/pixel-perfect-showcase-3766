@@ -53,7 +53,7 @@ CREATE TABLE public.documentos_fiscais (
 );
 
 CREATE INDEX documentos_fiscais_user_ordem_idx
-  ON public.documentos_fiscais (user_id, ordem_id, criada_em DESC);
+  ON public.documentos_fiscais (user_id, ordem_id, criado_em DESC);
 
 CREATE UNIQUE INDEX documentos_fiscais_ordem_ativo_unique
   ON public.documentos_fiscais (user_id, ordem_id)
