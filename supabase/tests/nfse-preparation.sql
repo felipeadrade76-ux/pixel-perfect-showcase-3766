@@ -96,6 +96,41 @@ BEGIN
   END IF;
 END $$;
 
+-- Changing the OS invalidates an unissued draft; the next preparation creates a fresh snapshot.
+UPDATE public.ordens
+SET itens = '[
+  {"id":"f1000000-0000-4000-8000-000000000003","descricao":"Mao de obra atualizada","tipo":"Mão de obra","valor":200},
+  {"id":"f1000000-0000-4000-8000-000000000005","descricao":"Peca","tipo":"Peça","valor":50}
+]'::jsonb
+WHERE id='f1000000-0000-4000-8000-000000000002';
+
+SELECT public.ritmeia_preparar_nfse(
+  'f1000000-0000-4000-8000-000000000002',
+  'f1000000-0000-4000-8000-000000000008',
+  'homologacao'
+);
+
+DO $
+DECLARE old_status text; new_status text; new_services numeric; active_count integer;
+BEGIN
+  SELECT status INTO old_status
+  FROM public.documentos_fiscais
+  WHERE id='f1000000-0000-4000-8000-000000000004';
+
+  SELECT status, valor_servicos INTO new_status, new_services
+  FROM public.documentos_fiscais
+  WHERE id='f1000000-0000-4000-8000-000000000008';
+
+  SELECT count(*) INTO active_count
+  FROM public.documentos_fiscais
+  WHERE ordem_id='f1000000-0000-4000-8000-000000000002'
+    AND status IN ('rascunho','pronto','enviando');
+
+  IF old_status <> 'cancelado' OR new_status <> 'rascunho' OR new_services <> 200 OR active_count <> 1 THEN
+    RAISE EXCEPTION 'Stale fiscal draft was not replaced safely';
+  END IF;
+END $;
+
 -- Authenticated browser clients cannot write fiscal status directly.
 DO $
 DECLARE blocked boolean := false;
