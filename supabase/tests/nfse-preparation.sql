@@ -33,18 +33,33 @@ SELECT public.ritmeia_preparar_nfse(
   'homologacao'
 );
 
-DO $$
-DECLARE v_status text; v_total numeric; v_nome text; v_os text;
+-- A repeated preparation request with a new id returns the same active draft.
+SELECT public.ritmeia_preparar_nfse(
+  'f1000000-0000-4000-8000-000000000002',
+  'f1000000-0000-4000-8000-000000000006',
+  'homologacao'
+);
+
+DO $
+DECLARE v_status text; v_total numeric; v_nome text; v_os text; v_count integer;
 BEGIN
   SELECT status, valor_servicos, tomador->>'nome', servico->>'numero_os'
     INTO v_status, v_total, v_nome, v_os
   FROM public.documentos_fiscais
   WHERE id='f1000000-0000-4000-8000-000000000004';
 
+  SELECT count(*) INTO v_count
+  FROM public.documentos_fiscais
+  WHERE ordem_id='f1000000-0000-4000-8000-000000000002'
+    AND status='rascunho';
+
   IF v_status <> 'rascunho' OR v_total <> 150 OR v_nome <> 'Cliente Fiscal' OR v_os IS NULL THEN
     RAISE EXCEPTION 'Fiscal snapshot was not prepared correctly';
   END IF;
-END $$;
+  IF v_count <> 1 THEN
+    RAISE EXCEPTION 'Repeated preparation created duplicate active fiscal drafts';
+  END IF;
+END $;
 
 -- Snapshot stays frozen if customer master data changes later.
 UPDATE public.clientes
@@ -62,6 +77,26 @@ BEGIN
     RAISE EXCEPTION 'Fiscal snapshot changed with master customer data';
   END IF;
 END $$;
+
+-- Authenticated browser clients cannot write fiscal status directly.
+DO $
+DECLARE blocked boolean := false;
+BEGIN
+  BEGIN
+    INSERT INTO public.documentos_fiscais (
+      id, ordem_id, cliente_id, valor_servicos, tomador, servico
+    ) VALUES (
+      'f1000000-0000-4000-8000-000000000007',
+      'f1000000-0000-4000-8000-000000000002',
+      'f1000000-0000-4000-8000-000000000001',
+      1,
+      '{}'::jsonb,
+      '{}'::jsonb
+    );
+  EXCEPTION WHEN insufficient_privilege THEN blocked := true;
+  END;
+  IF NOT blocked THEN RAISE EXCEPTION 'Direct fiscal writes were allowed'; END IF;
+END $;
 
 -- A second account cannot read the fiscal draft.
 SELECT set_config('request.jwt.claim.sub','bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',false);
