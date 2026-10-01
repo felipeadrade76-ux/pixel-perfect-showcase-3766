@@ -2,6 +2,17 @@
 -- This does NOT transmit or issue an invoice. It only freezes the operational data
 -- that a future provider adapter will use after the workshop's fiscal configuration is confirmed.
 
+DO $
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'ordens_id_user_unique' AND conrelid = 'public.ordens'::regclass
+  ) THEN
+    ALTER TABLE public.ordens
+      ADD CONSTRAINT ordens_id_user_unique UNIQUE (id, user_id);
+  END IF;
+END $;
+
 CREATE TABLE public.documentos_fiscais (
   id uuid PRIMARY KEY,
   user_id uuid NOT NULL DEFAULT auth.uid(),
@@ -60,7 +71,7 @@ CREATE OR REPLACE FUNCTION public.ritmeia_preparar_nfse(
 )
 RETURNS public.documentos_fiscais
 LANGUAGE plpgsql
-SECURITY INVOKER
+SECURITY DEFINER
 SET search_path = ''
 AS $$
 DECLARE
@@ -69,6 +80,10 @@ DECLARE
   v_total numeric(14,2);
   v_doc public.documentos_fiscais%ROWTYPE;
 BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Usuario nao autenticado';
+  END IF;
+
   IF p_ambiente NOT IN ('homologacao','producao') THEN
     RAISE EXCEPTION 'Ambiente fiscal invalido';
   END IF;
@@ -99,10 +114,11 @@ BEGIN
 
   SELECT coalesce(sum((item->>'valor')::numeric), 0)
     INTO v_total
-  FROM jsonb_array_elements(v_ordem.itens) AS item;
+  FROM jsonb_array_elements(v_ordem.itens) AS item
+  WHERE item->>'tipo' = 'Mão de obra';
 
   IF v_total <= 0 THEN
-    RAISE EXCEPTION 'A ordem precisa ter valor de servico antes de preparar a NFS-e';
+    RAISE EXCEPTION 'A ordem precisa ter mao de obra com valor antes de preparar a NFS-e';
   END IF;
 
   INSERT INTO public.documentos_fiscais (
