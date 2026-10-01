@@ -75,6 +75,8 @@ export type Database = {
           ambiente: string;
           provedor: string;
           valor_servicos: number;
+          valor_pecas: number;
+          valor_total_ordem: number;
           tomador: Json;
           servico: Json;
           numero_nfse: string | null;
@@ -97,6 +99,8 @@ export type Database = {
           ambiente?: string;
           provedor?: string;
           valor_servicos: number;
+          valor_pecas?: number;
+          valor_total_ordem: number;
           tomador: Json;
           servico: Json;
           numero_nfse?: string | null;
@@ -119,6 +123,8 @@ export type Database = {
           ambiente?: string;
           provedor?: string;
           valor_servicos?: number;
+          valor_pecas?: number;
+          valor_total_ordem?: number;
           tomador?: Json;
           servico?: Json;
           numero_nfse?: string | null;
