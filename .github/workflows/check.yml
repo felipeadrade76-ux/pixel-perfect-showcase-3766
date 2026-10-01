@@ -45,6 +45,7 @@ jobs:
       - name: Protect independent environment files
         run: |
           test -z "$(git ls-files .env)"
+          test -z "$(git ls-files '*.pfx' '*.p12' '*.pem' '*.key' '*.dump')"
           ! grep -R -E 'VITE_.*(SERVICE_ROLE|SECRET_KEY|CERT|PASSWORD)' .env.example
 
 
