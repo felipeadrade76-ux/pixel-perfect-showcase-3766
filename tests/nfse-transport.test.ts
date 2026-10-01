@@ -29,7 +29,6 @@ test("NFS-e gzip decoder rejects invalid data", () => {
   expect(() => gunzipBase64Xml("not-gzip")).toThrow("compactado inválido");
 });
 
-
 test("parses a successful National NFS-e response and decodes its XML", () => {
   const xml = '<?xml version="1.0" encoding="UTF-8"?><NFSe Id="NFS1"/>';
   const raw = JSON.stringify({
