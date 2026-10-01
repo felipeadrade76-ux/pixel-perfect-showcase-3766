@@ -90,7 +90,6 @@ test("invalid municipality or non-HTTPS API cannot become ready", () => {
   expect(config.invalid).toContain("NFSE_API_BASE_URL");
 });
 
-
 test("municipal provider stays blocked until a concrete adapter exists", () => {
   clear();
   validHomologation();
