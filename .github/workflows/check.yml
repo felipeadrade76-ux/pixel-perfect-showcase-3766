@@ -148,6 +148,7 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20260928010000_auditoria_regressao.sql
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20260928220000_clientes_equipamentos.sql
           psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20260929010000_preparacao_nfse.sql
+          psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261001090000_cnpj_alfanumerico.sql
       - name: Verify numbering, permissions, RLS and payment rules
         run: psql -X -v ON_ERROR_STOP=1 -f supabase/tests/phase2.sql
       - name: Verify assisted charges and explicit confirmation
