@@ -270,7 +270,9 @@ test("an authenticated user can create an OS and reopen it in a mobile viewport"
   await itens.getByRole("button", { name: "Adicionar item" }).click();
   await expect(itens).toContainText("R$ 100,00");
 
-  const fiscal = page.locator("section").filter({ has: page.getByRole("heading", { name: "NFS-e" }) });
+  const fiscal = page
+    .locator("section")
+    .filter({ has: page.getByRole("heading", { name: "NFS-e" }) });
   await fiscal.getByRole("button", { name: "Preparar NFS-e" }).click();
   await expect(fiscal).toContainText("Rascunho fiscal preparado");
   await expect(fiscal).toContainText("Serviços: R$ 100,00");
