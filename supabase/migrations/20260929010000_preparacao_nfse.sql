@@ -26,6 +26,7 @@ CREATE TABLE public.documentos_fiscais (
   valor_servicos numeric(14,2) NOT NULL CHECK (valor_servicos >= 0),
   valor_pecas numeric(14,2) NOT NULL DEFAULT 0 CHECK (valor_pecas >= 0),
   valor_total_ordem numeric(14,2) NOT NULL CHECK (valor_total_ordem >= 0),
+  ordem_revisao bigint NOT NULL,
   tomador jsonb NOT NULL,
   servico jsonb NOT NULL,
   numero_nfse text,
@@ -141,7 +142,17 @@ BEGIN
   LIMIT 1;
 
   IF v_doc.id IS NOT NULL THEN
-    RETURN v_doc;
+    IF v_doc.status = 'enviando' OR v_doc.ordem_revisao = v_ordem.revisao THEN
+      RETURN v_doc;
+    END IF;
+
+    UPDATE public.documentos_fiscais
+    SET status = 'cancelado'
+    WHERE id = v_doc.id
+      AND user_id = auth.uid()
+      AND status IN ('rascunho','pronto');
+
+    v_doc := NULL;
   END IF;
 
   INSERT INTO public.documentos_fiscais (
@@ -155,6 +166,7 @@ BEGIN
     valor_servicos,
     valor_pecas,
     valor_total_ordem,
+    ordem_revisao,
     tomador,
     servico
   ) VALUES (
@@ -168,6 +180,7 @@ BEGIN
     v_total,
     v_pecas,
     v_total_ordem,
+    v_ordem.revisao,
     jsonb_build_object(
       'nome', v_cliente.nome,
       'documento', v_cliente.documento,
