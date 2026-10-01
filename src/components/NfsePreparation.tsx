@@ -36,8 +36,8 @@ export function NfsePreparation({ ordem }: { ordem: Ordem }) {
   const atual = documentos.find((documento) => documento.status !== "cancelado");
   const desatualizado = Boolean(
     atual &&
-      (atual.status === "rascunho" || atual.status === "pronto") &&
-      Number(atual.ordem_revisao) !== ordem.revisao,
+    (atual.status === "rascunho" || atual.status === "pronto") &&
+    Number(atual.ordem_revisao) !== ordem.revisao,
   );
 
   async function preparar() {
