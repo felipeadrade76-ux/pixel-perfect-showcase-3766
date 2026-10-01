@@ -18,7 +18,7 @@ test("Ritmeia exposes an installable PWA shell without caching authenticated pag
   const swResponse = await request.get("/sw.js");
   expect(swResponse.ok()).toBe(true);
   const sw = await swResponse.text();
-  expect(sw).toContain('/ritmeia-mark.svg');
+  expect(sw).toContain("/ritmeia-mark.svg");
   expect(sw).not.toContain("/ordens");
   expect(sw).not.toContain("/clientes");
   expect(sw).not.toContain("/financeiro");
