@@ -1,2 +1,2 @@
 # Local development identity. Remote deployment must be linked explicitly to the user-owned Supabase project.
-project_id = "oficinia-local"
+project_id = "ritmeia-local"
