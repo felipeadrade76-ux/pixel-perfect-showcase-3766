@@ -41,6 +41,10 @@ export function getNfseServerConfig() {
   const missing =
     provider === "disabled" ? [] : required.filter(([, value]) => !value).map(([key]) => key);
 
+  if (provider === "municipal") {
+    missing.push("NFSE_MUNICIPAL_ADAPTER");
+  }
+
   const invalid: string[] = [];
   if (cnpj && !/^[A-Z0-9]{14}$/.test(cnpj)) invalid.push("NFSE_CNPJ");
   if (municipioIbge && !/^[0-9]{7}$/.test(municipioIbge)) invalid.push("NFSE_MUNICIPIO_IBGE");
@@ -55,8 +59,13 @@ export function getNfseServerConfig() {
 
   const productionBlocked = ambiente === "producao" && !allowProduction;
   const enabled = provider !== "disabled";
+  const supported = provider === "nacional";
   const ready =
-    enabled && missing.length === 0 && invalid.length === 0 && !productionBlocked;
+    enabled &&
+    supported &&
+    missing.length === 0 &&
+    invalid.length === 0 &&
+    !productionBlocked;
 
   return {
     provider,
@@ -71,6 +80,7 @@ export function getNfseServerConfig() {
     allowProduction,
     productionBlocked,
     enabled,
+    supported,
     ready,
     missing,
     invalid,
@@ -83,6 +93,7 @@ export function nfsePublicReadiness() {
     provider: config.provider,
     ambiente: config.ambiente,
     enabled: config.enabled,
+    supported: config.supported,
     ready: config.ready,
     missing: config.missing,
     invalid: config.invalid,
