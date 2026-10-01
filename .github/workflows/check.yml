@@ -36,10 +36,16 @@ jobs:
           SUPABASE_URL: https://example.supabase.co
           SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
         run: bash scripts/smoke-runtime.sh
+      - name: Validate Phase 6 operational scripts
+        run: |
+          bash -n scripts/phase6-remote-preflight.sh
+          bash -n scripts/phase6-backup.sh
+          bash -n scripts/phase6-apply-migrations.sh
+          grep -q 'YES_I_HAVE_A_BACKUP' scripts/phase6-apply-migrations.sh
       - name: Protect independent environment files
         run: |
           test -z "$(git ls-files .env)"
-          ! grep -R -E 'VITE_.*(SERVICE_ROLE|SECRET_KEY)' .env.example
+          ! grep -R -E 'VITE_.*(SERVICE_ROLE|SECRET_KEY|CERT|PASSWORD)' .env.example
 
 
 
