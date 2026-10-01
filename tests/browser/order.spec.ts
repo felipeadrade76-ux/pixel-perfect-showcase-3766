@@ -40,6 +40,7 @@ test("an authenticated user can create an OS and reopen it in a mobile viewport"
   let savedEquipment: Record<string, unknown> | null = null;
   let fiscalDraft: Record<string, unknown> | null = null;
   let charge: Record<string, unknown> | null = null;
+  let orderReads = 0;
   await page.route("https://example.supabase.co/**", async (route) => {
     const url = new URL(route.request().url());
     if (url.pathname === "/rest/v1/clientes") {
@@ -68,6 +69,7 @@ test("an authenticated user can create an OS and reopen it in a mobile viewport"
           body: JSON.stringify(savedClient),
         });
       } else {
+        orderReads += 1;
         const single = (route.request().headers()["accept"] ?? "").includes("vnd.pgrst.object");
         await route.fulfill({
           status: 200,
@@ -328,4 +330,8 @@ test("an authenticated user can create an OS and reopen it in a mobile viewport"
   await expect(page.getByLabel("Menu principal")).toBeVisible();
   await expect(page.getByLabel("Ritmeia — ir para o início")).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+
+  const readsBeforeResume = orderReads;
+  await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await expect.poll(() => orderReads).toBeGreaterThan(readsBeforeResume);
 });
