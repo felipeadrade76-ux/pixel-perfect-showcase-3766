@@ -32,7 +32,13 @@ export type NfseNacionalRejected = {
 
 export type NfseNacionalResult =
   | { ok: true; status: number; data: NfseNacionalSuccess; xml: string }
-  | { ok: false; status: number; retryable: boolean; data: NfseNacionalRejected | null; raw: string };
+  | {
+      ok: false;
+      status: number;
+      retryable: boolean;
+      data: NfseNacionalRejected | null;
+      raw: string;
+    };
 
 const MAX_RESPONSE_BYTES = 12 * 1024 * 1024;
 
