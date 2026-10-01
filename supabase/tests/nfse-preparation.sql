@@ -21,7 +21,10 @@ INSERT INTO public.ordens (
   'Cliente Fiscal',
   'Motosserra',
   'Reparo fiscal',
-  '[{"id":"f1000000-0000-4000-8000-000000000003","descricao":"Mao de obra","tipo":"Mão de obra","valor":150}]'::jsonb
+  '[
+    {"id":"f1000000-0000-4000-8000-000000000003","descricao":"Mao de obra","tipo":"Mão de obra","valor":150},
+    {"id":"f1000000-0000-4000-8000-000000000005","descricao":"Peca","tipo":"Peça","valor":50}
+  ]'::jsonb
 );
 
 SELECT public.ritmeia_preparar_nfse(
@@ -70,4 +73,11 @@ BEGIN
 END $$;
 
 RESET ROLE;
+
+SET ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub','cccccccc-cccc-4ccc-8ccc-cccccccccccc',false);
+INSERT INTO public.clientes (nome, documento)
+VALUES ('Empresa CNPJ Alfanumerico','12ABC34501DE35');
+RESET ROLE;
+
 SELECT 'PHASE6_FISCAL_DRAFT_TESTS_PASSED' AS result;
