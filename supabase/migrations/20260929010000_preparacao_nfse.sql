@@ -1,17 +1,20 @@
--- Phase 6: fiscal preparation and immutable-ish NFS-e draft snapshots.
--- This does NOT transmit or issue an invoice. It only freezes the operational data
--- that a future provider adapter will use after the workshop's fiscal configuration is confirmed.
+-- Phase 6: fiscal preparation and immutable NFS-e draft snapshots.
+-- This migration does NOT transmit or issue an invoice. It freezes operational data
+-- for a later provider adapter after the workshop's fiscal configuration is confirmed.
 
-DO $
+DO $ritmeia$
 BEGIN
   IF NOT EXISTS (
-    SELECT 1 FROM pg_constraint
-    WHERE conname = 'ordens_id_user_unique' AND conrelid = 'public.ordens'::regclass
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'ordens_id_user_unique'
+      AND conrelid = 'public.ordens'::regclass
   ) THEN
     ALTER TABLE public.ordens
       ADD CONSTRAINT ordens_id_user_unique UNIQUE (id, user_id);
   END IF;
-END $;
+END
+$ritmeia$;
 
 CREATE TABLE public.documentos_fiscais (
   id uuid PRIMARY KEY,
@@ -50,22 +53,27 @@ CREATE TABLE public.documentos_fiscais (
 );
 
 CREATE INDEX documentos_fiscais_user_ordem_idx
-  ON public.documentos_fiscais (user_id, ordem_id, criado_em DESC);
+  ON public.documentos_fiscais (user_id, ordem_id, criada_em DESC);
 
-CREATE UNIQUE INDEX documentos_fiscais_ordem_rascunho_unique
+CREATE UNIQUE INDEX documentos_fiscais_ordem_ativo_unique
   ON public.documentos_fiscais (user_id, ordem_id)
   WHERE status IN ('rascunho','pronto','enviando');
 
 GRANT SELECT ON public.documentos_fiscais TO authenticated;
 GRANT ALL ON public.documentos_fiscais TO service_role;
+
 ALTER TABLE public.documentos_fiscais ENABLE ROW LEVEL SECURITY;
+
 CREATE POLICY "Dono le seus documentos fiscais"
-  ON public.documentos_fiscais FOR SELECT TO authenticated
+  ON public.documentos_fiscais
+  FOR SELECT
+  TO authenticated
   USING (auth.uid() = user_id);
 
 CREATE TRIGGER ritmeia_documentos_fiscais_timestamp
 BEFORE UPDATE ON public.documentos_fiscais
-FOR EACH ROW EXECUTE FUNCTION public.ritmeia_atualizar_timestamp();
+FOR EACH ROW
+EXECUTE FUNCTION public.ritmeia_atualizar_timestamp();
 
 CREATE OR REPLACE FUNCTION public.ritmeia_preparar_nfse(
   p_ordem uuid,
@@ -76,11 +84,11 @@ RETURNS public.documentos_fiscais
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = ''
-AS $$
+AS $ritmeia$
 DECLARE
   v_ordem public.ordens%ROWTYPE;
   v_cliente public.clientes%ROWTYPE;
-  v_total numeric(14,2);
+  v_servicos numeric(14,2);
   v_pecas numeric(14,2);
   v_total_ordem numeric(14,2);
   v_doc public.documentos_fiscais%ROWTYPE;
@@ -93,9 +101,11 @@ BEGIN
     RAISE EXCEPTION 'Ambiente fiscal invalido';
   END IF;
 
-  SELECT * INTO v_ordem
+  SELECT *
+    INTO v_ordem
   FROM public.ordens
-  WHERE id = p_ordem AND user_id = auth.uid();
+  WHERE id = p_ordem
+    AND user_id = auth.uid();
 
   IF NOT FOUND THEN
     RAISE EXCEPTION 'Ordem nao encontrada';
@@ -105,20 +115,24 @@ BEGIN
     RAISE EXCEPTION 'A ordem precisa estar vinculada a um cliente cadastrado';
   END IF;
 
-  SELECT * INTO v_cliente
+  SELECT *
+    INTO v_cliente
   FROM public.clientes
-  WHERE id = v_ordem.cliente_id AND user_id = auth.uid();
+  WHERE id = v_ordem.cliente_id
+    AND user_id = auth.uid();
 
   IF NOT FOUND THEN
     RAISE EXCEPTION 'Cliente nao encontrado';
   END IF;
 
-  IF v_cliente.documento IS NULL OR v_cliente.cidade IS NULL OR v_cliente.uf IS NULL THEN
+  IF v_cliente.documento IS NULL
+    OR v_cliente.cidade IS NULL
+    OR v_cliente.uf IS NULL THEN
     RAISE EXCEPTION 'Complete CPF/CNPJ e cidade/UF antes de preparar a NFS-e';
   END IF;
 
   SELECT coalesce(sum((item->>'valor')::numeric), 0)
-    INTO v_total
+    INTO v_servicos
   FROM jsonb_array_elements(v_ordem.itens) AS item
   WHERE item->>'tipo' = 'Mão de obra';
 
@@ -127,19 +141,21 @@ BEGIN
   FROM jsonb_array_elements(v_ordem.itens) AS item
   WHERE item->>'tipo' = 'Peça';
 
-  v_total_ordem := v_total + v_pecas;
+  v_total_ordem := v_servicos + v_pecas;
 
-  IF v_total <= 0 THEN
+  IF v_servicos <= 0 THEN
     RAISE EXCEPTION 'A ordem precisa ter mao de obra com valor antes de preparar a NFS-e';
   END IF;
 
-  SELECT * INTO v_doc
+  SELECT *
+    INTO v_doc
   FROM public.documentos_fiscais
   WHERE user_id = auth.uid()
     AND ordem_id = v_ordem.id
     AND status IN ('rascunho','pronto','enviando')
   ORDER BY criado_em DESC
-  LIMIT 1;
+  LIMIT 1
+  FOR UPDATE;
 
   IF v_doc.id IS NOT NULL THEN
     IF v_doc.status = 'enviando' OR v_doc.ordem_revisao = v_ordem.revisao THEN
@@ -155,62 +171,80 @@ BEGIN
     v_doc := NULL;
   END IF;
 
-  INSERT INTO public.documentos_fiscais (
-    id,
-    user_id,
-    ordem_id,
-    cliente_id,
-    status,
-    ambiente,
-    provedor,
-    valor_servicos,
-    valor_pecas,
-    valor_total_ordem,
-    ordem_revisao,
-    tomador,
-    servico
-  ) VALUES (
-    p_documento_id,
-    auth.uid(),
-    v_ordem.id,
-    v_cliente.id,
-    'rascunho',
-    p_ambiente,
-    'nao_configurado',
-    v_total,
-    v_pecas,
-    v_total_ordem,
-    v_ordem.revisao,
-    jsonb_build_object(
-      'nome', v_cliente.nome,
-      'documento', v_cliente.documento,
-      'email', v_cliente.email,
-      'telefone', v_cliente.telefone,
-      'cep', v_cliente.cep,
-      'logradouro', v_cliente.logradouro,
-      'numero', v_cliente.numero,
-      'complemento', v_cliente.complemento,
-      'bairro', v_cliente.bairro,
-      'cidade', v_cliente.cidade,
-      'uf', v_cliente.uf
-    ),
-    jsonb_build_object(
-      'ordem_id', v_ordem.id,
-      'numero_os', v_ordem.numero,
-      'problema', v_ordem.problema,
-      'tipo_maquina', v_ordem.tipo_maquina,
-      'marca', v_ordem.marca,
-      'modelo', v_ordem.modelo,
-      'itens', v_ordem.itens
+  BEGIN
+    INSERT INTO public.documentos_fiscais (
+      id,
+      user_id,
+      ordem_id,
+      cliente_id,
+      status,
+      ambiente,
+      provedor,
+      valor_servicos,
+      valor_pecas,
+      valor_total_ordem,
+      ordem_revisao,
+      tomador,
+      servico
+    ) VALUES (
+      p_documento_id,
+      auth.uid(),
+      v_ordem.id,
+      v_cliente.id,
+      'rascunho',
+      p_ambiente,
+      'nao_configurado',
+      v_servicos,
+      v_pecas,
+      v_total_ordem,
+      v_ordem.revisao,
+      jsonb_build_object(
+        'nome', v_cliente.nome,
+        'documento', v_cliente.documento,
+        'email', v_cliente.email,
+        'telefone', v_cliente.telefone,
+        'cep', v_cliente.cep,
+        'logradouro', v_cliente.logradouro,
+        'numero', v_cliente.numero,
+        'complemento', v_cliente.complemento,
+        'bairro', v_cliente.bairro,
+        'cidade', v_cliente.cidade,
+        'uf', v_cliente.uf
+      ),
+      jsonb_build_object(
+        'ordem_id', v_ordem.id,
+        'numero_os', v_ordem.numero,
+        'problema', v_ordem.problema,
+        'tipo_maquina', v_ordem.tipo_maquina,
+        'marca', v_ordem.marca,
+        'modelo', v_ordem.modelo,
+        'itens', v_ordem.itens
+      )
     )
-  )
-  ON CONFLICT (id) DO NOTHING
-  RETURNING * INTO v_doc;
+    ON CONFLICT (id) DO NOTHING
+    RETURNING * INTO v_doc;
+  EXCEPTION
+    WHEN unique_violation THEN
+      v_doc := NULL;
+  END;
 
   IF v_doc.id IS NULL THEN
-    SELECT * INTO v_doc
+    SELECT *
+      INTO v_doc
     FROM public.documentos_fiscais
-    WHERE id = p_documento_id AND user_id = auth.uid();
+    WHERE user_id = auth.uid()
+      AND ordem_id = v_ordem.id
+      AND status IN ('rascunho','pronto','enviando')
+    ORDER BY criado_em DESC
+    LIMIT 1;
+
+    IF v_doc.id IS NULL THEN
+      SELECT *
+        INTO v_doc
+      FROM public.documentos_fiscais
+      WHERE id = p_documento_id
+        AND user_id = auth.uid();
+    END IF;
 
     IF v_doc.id IS NULL THEN
       RAISE EXCEPTION 'Nao foi possivel recuperar o rascunho fiscal';
@@ -222,7 +256,8 @@ BEGIN
   END IF;
 
   RETURN v_doc;
-END $;
+END
+$ritmeia$;
 
 REVOKE ALL ON FUNCTION public.ritmeia_preparar_nfse(uuid,uuid,text) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.ritmeia_preparar_nfse(uuid,uuid,text) TO authenticated;
