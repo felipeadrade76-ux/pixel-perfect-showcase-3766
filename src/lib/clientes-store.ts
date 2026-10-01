@@ -196,11 +196,7 @@ function validarDadosFiscais(input: Partial<ClienteInput>) {
   const documento = documentoNormalizado(input.documento);
   const cep = somenteDigitos(input.cep);
   const uf = input.uf?.trim();
-  if (
-    documento &&
-    !/^[0-9]{11}$/.test(documento) &&
-    !/^[A-Z0-9]{14}$/.test(documento)
-  ) {
+  if (documento && !/^[0-9]{11}$/.test(documento) && !/^[A-Z0-9]{14}$/.test(documento)) {
     throw new Error("CPF deve ter 11 números; CNPJ deve ter 14 caracteres.");
   }
   if (cep && cep.length !== 8) {
