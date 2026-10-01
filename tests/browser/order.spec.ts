@@ -278,6 +278,14 @@ test("an authenticated user can create an OS and reopen it in a mobile viewport"
   await expect(fiscal).toContainText("Homologação");
   await expect(fiscal.getByRole("button", { name: /Emitir NFS-e/ })).toBeDisabled();
 
+  await itens.locator('input[placeholder="Descrição"]').fill("Ajuste de cadastro fiscal");
+  await itens.locator("select").selectOption("Mão de obra");
+  await itens.locator('input[placeholder="Valor R$"]').fill("0");
+  await itens.getByRole("button", { name: "Adicionar item" }).click();
+  await expect(fiscal).toContainText("A OS mudou depois que este rascunho foi preparado.");
+  await fiscal.getByRole("button", { name: "Atualizar rascunho fiscal" }).click();
+  await expect(fiscal).not.toContainText("A OS mudou depois que este rascunho foi preparado.");
+
   const cobrancas = page
     .locator("section")
     .filter({ has: page.getByRole("heading", { name: "Cobranças assistidas" }) });
