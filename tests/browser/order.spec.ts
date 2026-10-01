@@ -260,6 +260,7 @@ test("an authenticated user can create an OS and reopen it in a mobile viewport"
     .locator("section")
     .filter({ has: page.getByRole("heading", { name: "Peças e mão de obra" }) });
   await itens.locator('input[placeholder="Descrição"]').fill("Reparo");
+  await itens.locator("select").selectOption("Mão de obra");
   await itens.locator('input[placeholder="Valor R$"]').fill("100");
   await itens.getByRole("button", { name: "Adicionar item" }).click();
   await expect(itens).toContainText("R$ 100,00");
