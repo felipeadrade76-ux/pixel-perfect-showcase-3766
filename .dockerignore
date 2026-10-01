@@ -14,3 +14,10 @@ dist-ssr
 *.log
 docs
 supabase
+
+*.pfx
+*.p12
+*.pem
+*.key
+backups
+*.dump
