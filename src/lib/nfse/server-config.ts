@@ -20,17 +20,19 @@ export function getNfseServerConfig() {
     ? (rawAmbiente as NfseAmbiente)
     : "homologacao";
 
-  const cnpj = env("NFSE_CNPJ");
-  const municipioIbge = env("NFSE_MUNICIPIO_IBGE");
+  const cnpj = env("NFSE_CNPJ")?.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  const municipioIbge = env("NFSE_MUNICIPIO_IBGE")?.replace(/\D/g, "");
   const inscricaoMunicipal = env("NFSE_INSCRICAO_MUNICIPAL");
   const apiBaseUrl = env("NFSE_API_BASE_URL");
   const certificatePath = env("NFSE_CERT_PFX_PATH");
   const certificatePassword = env("NFSE_CERT_PASSWORD");
   const codigoServico = env("NFSE_CODIGO_SERVICO");
+  const allowProduction = env("NFSE_ALLOW_PRODUCTION") === "yes";
 
   const required = [
     ["NFSE_CNPJ", cnpj],
     ["NFSE_MUNICIPIO_IBGE", municipioIbge],
+    ["NFSE_CODIGO_SERVICO", codigoServico],
     ["NFSE_API_BASE_URL", apiBaseUrl],
     ["NFSE_CERT_PFX_PATH", certificatePath],
     ["NFSE_CERT_PASSWORD", certificatePassword],
@@ -38,6 +40,23 @@ export function getNfseServerConfig() {
 
   const missing =
     provider === "disabled" ? [] : required.filter(([, value]) => !value).map(([key]) => key);
+
+  const invalid: string[] = [];
+  if (cnpj && !/^[A-Z0-9]{14}$/.test(cnpj)) invalid.push("NFSE_CNPJ");
+  if (municipioIbge && !/^[0-9]{7}$/.test(municipioIbge)) invalid.push("NFSE_MUNICIPIO_IBGE");
+  if (apiBaseUrl) {
+    try {
+      const parsed = new URL(apiBaseUrl);
+      if (parsed.protocol !== "https:") invalid.push("NFSE_API_BASE_URL");
+    } catch {
+      invalid.push("NFSE_API_BASE_URL");
+    }
+  }
+
+  const productionBlocked = ambiente === "producao" && !allowProduction;
+  const enabled = provider !== "disabled";
+  const ready =
+    enabled && missing.length === 0 && invalid.length === 0 && !productionBlocked;
 
   return {
     provider,
@@ -49,9 +68,12 @@ export function getNfseServerConfig() {
     certificatePath,
     certificatePassword,
     codigoServico,
-    enabled: provider !== "disabled",
-    ready: provider !== "disabled" && missing.length === 0,
+    allowProduction,
+    productionBlocked,
+    enabled,
+    ready,
     missing,
+    invalid,
   };
 }
 
@@ -63,6 +85,8 @@ export function nfsePublicReadiness() {
     enabled: config.enabled,
     ready: config.ready,
     missing: config.missing,
+    invalid: config.invalid,
+    productionBlocked: config.productionBlocked,
     municipioConfigured: Boolean(config.municipioIbge),
     cnpjConfigured: Boolean(config.cnpj),
     certificateConfigured: Boolean(config.certificatePath && config.certificatePassword),
