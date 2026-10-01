@@ -27,6 +27,7 @@ function Login() {
   const [senha, setSenha] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const googleAtivo = import.meta.env["VITE_GOOGLE_AUTH_ENABLED"] === "true";
 
   const ir = () => {
     window.location.href = next;
@@ -58,7 +59,8 @@ function Login() {
   }
 
   async function google() {
-    sessionStorage.setItem("oficina-next", next);
+    if (!googleAtivo) return;
+    sessionStorage.setItem("ritmeia-next", next);
     setBusy(true);
     setMsg(null);
     const { error } = await supabase.auth.signInWithOAuth({
@@ -115,12 +117,16 @@ function Login() {
             {modo === "entrar" ? "Entrar" : "Criar conta"}
           </button>
         </form>
-        <button
-          onClick={google}
-          className="mt-3 h-12 w-full rounded-xl border border-input bg-background font-medium"
-        >
-          Continuar com Google
-        </button>
+        {googleAtivo ? (
+          <button
+            type="button"
+            onClick={() => void google()}
+            disabled={busy}
+            className="mt-3 h-12 w-full rounded-xl border border-input bg-background font-medium disabled:opacity-60"
+          >
+            Continuar com Google
+          </button>
+        ) : null}
         <button
           onClick={() => setModo(modo === "entrar" ? "criar" : "entrar")}
           className="mt-4 min-h-11 w-full rounded-xl text-sm font-medium text-muted-foreground hover:bg-secondary"
