@@ -13,7 +13,7 @@ export function NfsePreparation({ ordem }: { ordem: Ordem }) {
   const [carregando, setCarregando] = useState(true);
   const [ocupado, setOcupado] = useState(false);
   const [erro, setErro] = useState("");
-  const [requisicaoId] = useState(() => crypto.randomUUID());
+  const [requisicaoId, setRequisicaoId] = useState(() => crypto.randomUUID());
 
   useEffect(() => {
     let ativo = true;
@@ -33,7 +33,12 @@ export function NfsePreparation({ ordem }: { ordem: Ordem }) {
     };
   }, [ordem.id]);
 
-  const atual = documentos[0];
+  const atual = documentos.find((documento) => documento.status !== "cancelado");
+  const desatualizado = Boolean(
+    atual &&
+      (atual.status === "rascunho" || atual.status === "pronto") &&
+      Number(atual.ordem_revisao) !== ordem.revisao,
+  );
 
   async function preparar() {
     if (ocupado) return;
@@ -42,6 +47,7 @@ export function NfsePreparation({ ordem }: { ordem: Ordem }) {
     try {
       const documento = await prepararNfse(ordem.id, requisicaoId);
       setDocumentos((lista) => [documento, ...lista.filter((item) => item.id !== documento.id)]);
+      setRequisicaoId(crypto.randomUUID());
     } catch (error) {
       setErro(error instanceof Error ? error.message : "Não foi possível preparar a NFS-e.");
     } finally {
@@ -86,6 +92,24 @@ export function NfsePreparation({ ordem }: { ordem: Ordem }) {
               Homologação
             </span>
           </div>
+          {desatualizado ? (
+            <div className="mt-3 rounded-xl border border-warning/35 bg-warning/10 p-3">
+              <p className="text-xs font-bold text-warning-foreground">
+                A OS mudou depois que este rascunho foi preparado.
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Atualize o rascunho antes de qualquer emissão para congelar os valores atuais.
+              </p>
+              <button
+                type="button"
+                onClick={() => void preparar()}
+                disabled={ocupado}
+                className="mt-3 min-h-11 w-full rounded-xl bg-accent px-4 text-sm font-bold text-accent-foreground disabled:opacity-50"
+              >
+                {ocupado ? "Atualizando..." : "Atualizar rascunho fiscal"}
+              </button>
+            </div>
+          ) : null}
           <p className="mt-3 flex items-start gap-2 text-xs text-muted-foreground">
             <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-success" />
             Os dados deste rascunho ficam preservados mesmo se o cadastro do cliente mudar depois.
@@ -97,7 +121,9 @@ export function NfsePreparation({ ordem }: { ordem: Ordem }) {
             disabled
             className="mt-4 min-h-11 w-full rounded-xl border border-input px-4 text-sm font-bold text-muted-foreground opacity-70"
           >
-            Emitir NFS-e — aguardando configuração fiscal
+            {desatualizado
+              ? "Emitir NFS-e — atualize o rascunho primeiro"
+              : "Emitir NFS-e — aguardando configuração fiscal"}
           </button>
         </div>
       ) : (
