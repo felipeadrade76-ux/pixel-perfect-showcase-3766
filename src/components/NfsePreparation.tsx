@@ -7,11 +7,7 @@ import {
   type DocumentoFiscal,
 } from "@/lib/nfse-store";
 import { moeda, type Ordem } from "@/lib/oficina-store";
-import {
-  carregarNfseReadiness,
-  emitirNfseRemota,
-  type NfseReadiness,
-} from "@/lib/nfse-client";
+import { carregarNfseReadiness, emitirNfseRemota, type NfseReadiness } from "@/lib/nfse-client";
 
 export function NfsePreparation({ ordem }: { ordem: Ordem }) {
   const [documentos, setDocumentos] = useState<DocumentoFiscal[]>([]);
