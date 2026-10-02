@@ -113,7 +113,6 @@ test("municipal provider stays blocked until a concrete adapter exists", () => {
   expect(config.missing).toContain("NFSE_MUNICIPAL_ADAPTER");
 });
 
-
 test("Simples Nacional profile 3 requires its assessment regime", () => {
   clear();
   validHomologation();
