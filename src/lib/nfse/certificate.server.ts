@@ -10,7 +10,11 @@ function findPem(output: string, label: "PRIVATE KEY" | "CERTIFICATE"): string {
       ? /-----BEGIN (?:RSA )?PRIVATE KEY-----[\s\S]+?-----END (?:RSA )?PRIVATE KEY-----/
       : /-----BEGIN CERTIFICATE-----[\s\S]+?-----END CERTIFICATE-----/;
   const match = output.match(re)?.[0];
-  if (!match) throw new Error(`PKCS#12 não contém ${label === "PRIVATE KEY" ? "chave privada" : "certificado"} utilizável.`);
+  if (!match) {
+    throw new Error(
+      `PKCS#12 não contém ${label === "PRIVATE KEY" ? "chave privada" : "certificado"} utilizável.`,
+    );
+  }
   return match;
 }
 
