@@ -90,6 +90,14 @@ export type Database = {
           criado_em: string;
           atualizado_em: string;
           emitido_em: string | null;
+          serie_dps: number | null;
+          numero_dps: number | null;
+          id_dps: string | null;
+          chave_acesso: string | null;
+          xml_nfse: string | null;
+          tentativas: number;
+          ultima_tentativa_em: string | null;
+          ultimo_http_status: number | null;
         };
         Insert: {
           id: string;
@@ -115,6 +123,14 @@ export type Database = {
           criado_em?: string;
           atualizado_em?: string;
           emitido_em?: string | null;
+          serie_dps?: number | null;
+          numero_dps?: number | null;
+          id_dps?: string | null;
+          chave_acesso?: string | null;
+          xml_nfse?: string | null;
+          tentativas?: number;
+          ultima_tentativa_em?: string | null;
+          ultimo_http_status?: number | null;
         };
         Update: {
           id?: string;
@@ -140,6 +156,35 @@ export type Database = {
           criado_em?: string;
           atualizado_em?: string;
           emitido_em?: string | null;
+          serie_dps?: number | null;
+          numero_dps?: number | null;
+          id_dps?: string | null;
+          chave_acesso?: string | null;
+          xml_nfse?: string | null;
+          tentativas?: number;
+          ultima_tentativa_em?: string | null;
+          ultimo_http_status?: number | null;
+        };
+        Relationships: [];
+      };
+      nfse_dps_contadores: {
+        Row: {
+          user_id: string;
+          serie: number;
+          proximo_numero: number;
+          atualizado_em: string;
+        };
+        Insert: {
+          user_id: string;
+          serie: number;
+          proximo_numero?: number;
+          atualizado_em?: string;
+        };
+        Update: {
+          user_id?: string;
+          serie?: number;
+          proximo_numero?: number;
+          atualizado_em?: string;
         };
         Relationships: [];
       };
@@ -319,6 +364,10 @@ export type Database = {
       };
       ritmeia_preparar_nfse: {
         Args: { p_ordem: string; p_documento_id: string; p_ambiente?: string };
+        Returns: Database["public"]["Tables"]["documentos_fiscais"]["Row"];
+      };
+      ritmeia_reservar_dps: {
+        Args: { p_user_id: string; p_documento_id: string; p_serie: number };
         Returns: Database["public"]["Tables"]["documentos_fiscais"]["Row"];
       };
     };
