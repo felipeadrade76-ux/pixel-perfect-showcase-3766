@@ -108,9 +108,7 @@ export function buildInfDps(profile: DpsFiscalProfile, snapshot: DpsSnapshot) {
   const id = buildDpsId(profile, snapshot.numeroDps);
   const ambiente = profile.ambiente === "producao" ? "1" : "2";
   const regAp =
-    profile.opcaoSimplesNacional === "3"
-      ? tag("regApTribSN", profile.regimeApuracaoSimples)
-      : "";
+    profile.opcaoSimplesNacional === "3" ? tag("regApTribSN", profile.regimeApuracaoSimples) : "";
 
   const prest =
     "<prest>" +
