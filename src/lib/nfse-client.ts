@@ -33,9 +33,11 @@ export async function emitirNfseRemota(documentoId: string): Promise<{ chaveAces
     },
     body: JSON.stringify({ documentoId }),
   });
-  const payload = (await response.json().catch(() => null)) as
-    | { ok?: boolean; message?: string; chaveAcesso?: string }
-    | null;
+  const payload = (await response.json().catch(() => null)) as {
+    ok?: boolean;
+    message?: string;
+    chaveAcesso?: string;
+  } | null;
   if (!response.ok || !payload?.ok) {
     throw new Error(payload?.message || "Não foi possível emitir a NFS-e.");
   }
