@@ -7,6 +7,11 @@ import {
   type DocumentoFiscal,
 } from "@/lib/nfse-store";
 import { moeda, type Ordem } from "@/lib/oficina-store";
+import {
+  carregarNfseReadiness,
+  emitirNfseRemota,
+  type NfseReadiness,
+} from "@/lib/nfse-client";
 
 export function NfsePreparation({ ordem }: { ordem: Ordem }) {
   const [documentos, setDocumentos] = useState<DocumentoFiscal[]>([]);
@@ -14,9 +19,18 @@ export function NfsePreparation({ ordem }: { ordem: Ordem }) {
   const [ocupado, setOcupado] = useState(false);
   const [erro, setErro] = useState("");
   const [requisicaoId, setRequisicaoId] = useState(() => crypto.randomUUID());
+  const [readiness, setReadiness] = useState<NfseReadiness | null>(null);
 
   useEffect(() => {
     let ativo = true;
+    void carregarNfseReadiness()
+      .then((status) => {
+        if (ativo) setReadiness(status);
+      })
+      .catch(() => {
+        if (ativo) setReadiness(null);
+      });
+
     void listarDocumentosDaOrdem(ordem.id)
       .then((data) => {
         if (ativo) setDocumentos(data);
@@ -50,6 +64,21 @@ export function NfsePreparation({ ordem }: { ordem: Ordem }) {
       setRequisicaoId(crypto.randomUUID());
     } catch (error) {
       setErro(error instanceof Error ? error.message : "Não foi possível preparar a NFS-e.");
+    } finally {
+      setOcupado(false);
+    }
+  }
+
+  async function emitir(documento: DocumentoFiscal) {
+    if (ocupado || !readiness?.ready) return;
+    setOcupado(true);
+    setErro("");
+    try {
+      await emitirNfseRemota(documento.id);
+      const atualizados = await listarDocumentosDaOrdem(ordem.id);
+      setDocumentos(atualizados);
+    } catch (error) {
+      setErro(error instanceof Error ? error.message : "Não foi possível emitir a NFS-e.");
     } finally {
       setOcupado(false);
     }
@@ -118,13 +147,25 @@ export function NfsePreparation({ ordem }: { ordem: Ordem }) {
           </p>
           <button
             type="button"
-            disabled
-            className="mt-4 min-h-11 w-full rounded-xl border border-input px-4 text-sm font-bold text-muted-foreground opacity-70"
+            disabled={ocupado || desatualizado || !readiness?.ready || atual.status === "emitido"}
+            onClick={() => void emitir(atual)}
+            className="mt-4 min-h-11 w-full rounded-xl border border-input px-4 text-sm font-bold text-foreground disabled:text-muted-foreground disabled:opacity-60"
           >
-            {desatualizado
-              ? "Emitir NFS-e — atualize o rascunho primeiro"
-              : "Emitir NFS-e — aguardando configuração fiscal"}
+            {atual.status === "emitido"
+              ? "NFS-e emitida"
+              : desatualizado
+                ? "Emitir NFS-e — atualize o rascunho primeiro"
+                : readiness?.ready
+                  ? ocupado
+                    ? "Emitindo NFS-e..."
+                    : "Emitir NFS-e"
+                  : "Emitir NFS-e — aguardando configuração fiscal"}
           </button>
+          {atual.chave_acesso ? (
+            <p className="mt-2 break-all text-xs text-muted-foreground">
+              Chave de acesso: {atual.chave_acesso}
+            </p>
+          ) : null}
         </div>
       ) : (
         <button
