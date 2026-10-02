@@ -27,14 +27,13 @@ function stringValue(object: ObjectJson, key: string): string | undefined {
 function descricaoServico(servico: Json): string {
   const object = objectJson(servico);
   const itens = object["itens"];
-  const descricoes =
-    Array.isArray(itens)
-      ? itens
-          .map((item) => objectJson(item))
-          .filter((item) => stringValue(item, "tipo") === "Mão de obra")
-          .map((item) => stringValue(item, "descricao"))
-          .filter((value): value is string => Boolean(value))
-      : [];
+  const descricoes = Array.isArray(itens)
+    ? itens
+        .map((item) => objectJson(item))
+        .filter((item) => stringValue(item, "tipo") === "Mão de obra")
+        .map((item) => stringValue(item, "descricao"))
+        .filter((value): value is string => Boolean(value))
+    : [];
 
   const problema = stringValue(object, "problema");
   const value = descricoes.length ? descricoes.join("; ") : problema;
@@ -71,15 +70,13 @@ function profileFromConfig(config: ReturnType<typeof getNfseServerConfig>): DpsF
   };
 }
 
-function snapshotFromDocument(
-  documento: {
-    numero_dps: number | null;
-    valor_servicos: number;
-    tomador: Json;
-    servico: Json;
-    criado_em: string;
-  },
-): DpsSnapshot {
+function snapshotFromDocument(documento: {
+  numero_dps: number | null;
+  valor_servicos: number;
+  tomador: Json;
+  servico: Json;
+  criado_em: string;
+}): DpsSnapshot {
   if (!documento.numero_dps) throw new Error("DPS_NOT_RESERVED");
   const tomador = objectJson(documento.tomador);
   const nome = stringValue(tomador, "nome");
@@ -249,7 +246,12 @@ export const Route = createFileRoute("/api/nfse/emit")({
                   xml: nfse.xml,
                 });
                 return Response.json(
-                  { ok: true, reconciled: true, chaveAcesso: reconciliation.chaveAcesso, documento: emitted },
+                  {
+                    ok: true,
+                    reconciled: true,
+                    chaveAcesso: reconciliation.chaveAcesso,
+                    documento: emitted,
+                  },
                   { headers: { "Cache-Control": "no-store" } },
                 );
               }
