@@ -1,65 +1,85 @@
 # Fase 6 — integrações e preparação para operação real
 
-Status: em execução no branch `feature/ritmeia-v12-integracoes`.
+Status: **implementação de software concluída** no branch `feature/ritmeia-v12-integracoes`.
+A ativação fiscal real permanece bloqueada por dados/credenciais externos da oficina e não pode ser
+simulada como concluída.
 
-## Objetivos
+## Entregas concluídas no código
 
-- preparar homologação real sem tocar no ambiente publicado atual;
-- transformar a Ritmeia em PWA instalável;
-- validar Supabase/Auth em ambiente próprio;
-- preparar NFS-e sem expor certificado ou senha no navegador;
-- criar health check para hospedagem;
-- exigir backup e preflight antes de qualquer migração remota;
-- melhorar retomada/múltiplos dispositivos;
-- bloquear produção fiscal até liberação deliberada.
+- PWA instalável com manifest e service worker;
+- service worker sem cache de clientes, OS, financeiro ou páginas autenticadas;
+- health check para hospedagem;
+- login por e-mail/senha e Google opcional, sem mostrar Google antes de configurar o provedor;
+- atualização de dados ao retomar o app;
+- scripts de preflight, backup e migração remota com trava explícita;
+- CNPJ alfanumérico compatível;
+- documentos fiscais protegidos por RLS;
+- snapshot fiscal do cliente/OS, separado do cadastro mestre;
+- mão de obra e peças separadas para não somar peças ao valor de serviço da NFS-e;
+- invalidação de rascunho fiscal quando a OS muda;
+- numeração DPS persistente, monotônica e idempotente por conta/série;
+- construção da DPS Nacional v1.01;
+- assinatura XMLDSig server-side usando certificado A1/PFX;
+- mTLS para a API Nacional;
+- envio de DPS, leitura de rejeição e tratamento de falha transitória;
+- reconciliação por ID da DPS antes de qualquer retry de POST;
+- consulta da NFS-e pela chave de acesso;
+- persistência da chave e XML após emissão;
+- produção fiscal bloqueada por padrão;
+- perfil fiscal nacional obrigatório antes de habilitar o botão de emissão;
+- adaptador municipal genérico deliberadamente bloqueado até existir implementação concreta.
 
-## Entregue no código
+## Segurança
 
-- manifest + service worker PWA;
-- service worker só guarda o ícone público da marca, nunca clientes/OS/financeiro;
-- `/api/health` mínimo, sem vazar configuração fiscal;
-- login Google escondido até `VITE_GOOGLE_AUTH_ENABLED=true`;
-- atualização automática ao voltar para o app/focar a janela;
-- scripts de preflight, backup e aplicação de migrations com trava explícita;
-- cadastro compatível com CNPJ alfanumérico de 2026;
-- tabela de documentos fiscais com RLS;
-- RPC idempotente para preparar rascunho fiscal;
-- snapshot do tomador e serviço, preservado mesmo se o cadastro mestre mudar;
-- mão de obra e peças congeladas em valores separados;
-- browser não pode alterar status fiscal diretamente;
-- configuração NFS-e server-only, HTTPS obrigatório e produção bloqueada por padrão;
-- testes de banco, navegador, PWA e configuração fiscal.
+- certificado e senha nunca entram em variável `VITE_`;
+- service role do Supabase é exclusivamente server-side;
+- browser autenticado não altera diretamente status, número, chave ou XML fiscal;
+- produção exige `NFSE_ALLOW_PRODUCTION=yes`;
+- API fiscal exige HTTPS;
+- retries preservam a mesma série/número DPS;
+- se um POST terminar sem confirmação, a próxima tentativa consulta a DPS antes de reenviar;
+- nenhum segredo, certificado, dump ou chave privada é versionado.
 
-## NFS-e
+## Perfil fiscal obrigatório
 
-A Ritmeia já consegue preparar um rascunho fiscal seguro a partir de uma OS vinculada a cliente,
-mas **não transmite uma nota ainda**. Isso é intencional: o adaptador de emissão depende do
-emissor correto da oficina.
+Antes de habilitar a emissão real, o servidor exige:
 
-Para emissão direta pelo Sistema Nacional, a documentação oficial atual usa DPS em XML,
-compactada em GZip/Base64 e enviada em JSON para `POST /nfse`, com certificado digital/mTLS
-quando exigido pela API. Municípios também podem manter emissor próprio, então não é seguro
-assumir o Sistema Nacional sem identificar o caso concreto.
+- `NFSE_CNPJ`;
+- `NFSE_MUNICIPIO_IBGE`;
+- `NFSE_CODIGO_SERVICO` (6 dígitos);
+- `NFSE_SERIE_DPS`;
+- `NFSE_OP_SIMP_NAC`;
+- `NFSE_REG_ESP_TRIB`;
+- `NFSE_TRIB_ISSQN`;
+- `NFSE_TP_RET_ISSQN`;
+- `NFSE_REG_AP_TRIB_SN` quando aplicável;
+- URL HTTPS do ambiente Nacional;
+- certificado A1/PFX + senha no servidor;
+- inscrição municipal/código municipal do serviço quando exigidos pela parametrização.
 
-Dados externos ainda necessários para fechar a emissão:
+Esses valores devem ser confirmados com o cadastro fiscal real da oficina e o emissor usado hoje.
+A Ritmeia não inventa regime, município, código de serviço ou retenção.
 
-- município da oficina e código IBGE;
-- regime/enquadramento atual;
-- portal/emissor utilizado hoje;
-- CNPJ do prestador;
-- inscrição municipal, quando aplicável;
-- código/subitem de serviço usado nas notas;
-- tipo de autenticação exigida pelo emissor;
-- certificado A1/PFX e senha somente se a integração escolhida exigir certificado.
+## Homologação externa
 
-Produção só pode ficar pronta com `NFSE_ALLOW_PRODUCTION=yes` no servidor. Homologação é o
-padrão.
+Para declarar **ativação fiscal real**, ainda é necessário fornecer/provisionar fora do repositório:
+
+1. município da oficina e código IBGE correto;
+2. regime/enquadramento tributário;
+3. CNPJ/IM e código de serviço efetivamente usados;
+4. confirmação de uso do Emissor Nacional ou identificação do provedor municipal;
+5. certificado/credencial fiscal;
+6. Supabase de homologação sob controle do projeto;
+7. hospedagem de homologação;
+8. emissão real de uma NFS-e em ambiente de testes/restrito;
+9. teste real de rejeição/reconciliação;
+10. teste em celular e desktop reais.
+
+Sem esses itens externos, não é tecnicamente honesto afirmar que uma nota foi emitida em homologação.
 
 ## Banco remoto
 
 Nunca aplicar migrations por tentativa.
-
-Ordem obrigatória:
 
 ```sh
 bash scripts/phase6-remote-preflight.sh
@@ -68,26 +88,19 @@ RITMEIA_APPLY_MIGRATIONS=YES_I_HAVE_A_BACKUP \
   bash scripts/phase6-apply-migrations.sh
 ```
 
-Esses scripts exigem `DATABASE_URL` em ambiente privado. O CI nunca recebe a URL real.
+## QA do código
 
-## Portões para encerrar a Fase 6
+O HEAD da Fase 6 exige CI integralmente verde em:
 
-A fase só pode ser marcada como concluída quando:
+- build e TypeScript estrito;
+- ESLint sem erros/avisos;
+- testes unitários;
+- DPS XML + assinatura;
+- transporte/rejeição/retry;
+- PostgreSQL descartável com RLS, snapshot fiscal e sequência DPS;
+- browser/Chromium;
+- PWA;
+- container/SSR.
 
-1. CI do HEAD estiver integralmente verde.
-2. Município/regime/provedor fiscal estiverem identificados.
-3. Emissão NFS-e passar no ambiente de homologação correto.
-4. Erro/rejeição e retry fiscal forem validados sem duplicar nota.
-5. Supabase de homologação estiver provisionado sob controle do projeto.
-6. Backup + preflight + migrations tiverem sido validados no ambiente de homologação.
-7. Login por e-mail estiver testado; Google só se o provedor estiver configurado.
-8. Fluxo completo for testado em celular e desktop, inclusive retomada/rede instável.
-9. Nenhuma conexão bancária tiver sido adicionada.
-10. Produção, `main` e banco publicado permanecerem intocados até autorização explícita.
-
-## Referência técnica oficial
-
-- https://www.gov.br/nfse/pt-br/biblioteca/documentacao-tecnica/documentacao-atual/documentacao-atual
-- esquema de produção usado como referência: NFS-e v1.01 / 09-02-2026
-
-Nenhuma credencial fiscal deve ser commitada.
+Nenhum merge em `main`, deploy, migração remota ou ativação de produção deve ocorrer sem
+autorização explícita.
