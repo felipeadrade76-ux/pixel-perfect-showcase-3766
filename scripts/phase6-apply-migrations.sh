@@ -16,6 +16,7 @@ migrations=(
   supabase/migrations/20260928220000_clientes_equipamentos.sql
   supabase/migrations/20260929010000_preparacao_nfse.sql
   supabase/migrations/20261001090000_cnpj_alfanumerico.sql
+  supabase/migrations/20261001233000_nfse_emissao_nacional.sql
 )
 
 for migration in "${migrations[@]}"; do
