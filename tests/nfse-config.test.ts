@@ -8,6 +8,13 @@ const KEYS = [
   "NFSE_MUNICIPIO_IBGE",
   "NFSE_INSCRICAO_MUNICIPAL",
   "NFSE_CODIGO_SERVICO",
+  "NFSE_CODIGO_SERVICO_MUNICIPAL",
+  "NFSE_SERIE_DPS",
+  "NFSE_OP_SIMP_NAC",
+  "NFSE_REG_AP_TRIB_SN",
+  "NFSE_REG_ESP_TRIB",
+  "NFSE_TRIB_ISSQN",
+  "NFSE_TP_RET_ISSQN",
   "NFSE_API_BASE_URL",
   "NFSE_CERT_PFX_PATH",
   "NFSE_CERT_PASSWORD",
@@ -33,7 +40,12 @@ function validHomologation() {
   process.env.NFSE_AMBIENTE = "homologacao";
   process.env.NFSE_CNPJ = "12ABC34501DE35";
   process.env.NFSE_MUNICIPIO_IBGE = "3100000";
-  process.env.NFSE_CODIGO_SERVICO = "14.01";
+  process.env.NFSE_CODIGO_SERVICO = "010701";
+  process.env.NFSE_SERIE_DPS = "1601";
+  process.env.NFSE_OP_SIMP_NAC = "1";
+  process.env.NFSE_REG_ESP_TRIB = "0";
+  process.env.NFSE_TRIB_ISSQN = "1";
+  process.env.NFSE_TP_RET_ISSQN = "1";
   process.env.NFSE_API_BASE_URL = "https://homologacao.example.gov.br";
   process.env.NFSE_CERT_PFX_PATH = "/run/secrets/nfse.pfx";
   process.env.NFSE_CERT_PASSWORD = "server-only";
@@ -99,4 +111,27 @@ test("municipal provider stays blocked until a concrete adapter exists", () => {
   expect(config.supported).toBe(false);
   expect(config.ready).toBe(false);
   expect(config.missing).toContain("NFSE_MUNICIPAL_ADAPTER");
+});
+
+
+test("Simples Nacional profile 3 requires its assessment regime", () => {
+  clear();
+  validHomologation();
+  process.env.NFSE_OP_SIMP_NAC = "3";
+  expect(getNfseServerConfig().ready).toBe(false);
+  expect(getNfseServerConfig().missing).toContain("NFSE_REG_AP_TRIB_SN");
+
+  process.env.NFSE_REG_AP_TRIB_SN = "1";
+  expect(getNfseServerConfig().ready).toBe(true);
+});
+
+test("service code and DPS series are validated before readiness", () => {
+  clear();
+  validHomologation();
+  process.env.NFSE_CODIGO_SERVICO = "1401";
+  process.env.NFSE_SERIE_DPS = "0";
+  const config = getNfseServerConfig();
+  expect(config.ready).toBe(false);
+  expect(config.invalid).toContain("NFSE_CODIGO_SERVICO");
+  expect(config.invalid).toContain("NFSE_SERIE_DPS");
 });
