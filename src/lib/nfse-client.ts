@@ -39,5 +39,5 @@ export async function emitirNfseRemota(documentoId: string): Promise<{ chaveAces
   if (!response.ok || !payload?.ok) {
     throw new Error(payload?.message || "Não foi possível emitir a NFS-e.");
   }
-  return { chaveAcesso: payload.chaveAcesso };
+  return payload.chaveAcesso ? { chaveAcesso: payload.chaveAcesso } : {};
 }
