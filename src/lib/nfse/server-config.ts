@@ -148,9 +148,9 @@ export function nfsePublicReadiness() {
     serieDpsConfigured: Boolean(config.serieDps),
     regimeConfigured: Boolean(
       config.opcaoSimplesNacional &&
-        config.regimeEspecialTributacao &&
-        config.tributacaoIssqn &&
-        config.retencaoIssqn,
+      config.regimeEspecialTributacao &&
+      config.tributacaoIssqn &&
+      config.retencaoIssqn,
     ),
   };
 }
