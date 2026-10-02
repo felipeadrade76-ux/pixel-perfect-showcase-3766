@@ -54,8 +54,7 @@ test("serializes a minimal v1.01 DPS snapshot in deterministic order", () => {
 test("signs the DPS information element and embeds an X509 certificate", () => {
   const { privateKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
   const privateKeyPem = privateKey.export({ type: "pkcs8", format: "pem" }).toString();
-  const certificatePem =
-    "-----BEGIN CERTIFICATE-----\nQUJDREVGRw==\n-----END CERTIFICATE-----";
+  const certificatePem = "-----BEGIN CERTIFICATE-----\nQUJDREVGRw==\n-----END CERTIFICATE-----";
 
   const signed = signDpsXml(profile, snapshot, privateKeyPem, certificatePem);
   expect(signed.id).toBe(buildDpsId(profile, 42));
