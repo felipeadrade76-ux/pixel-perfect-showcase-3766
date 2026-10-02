@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ArrowLeft, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { CobrancaAssistida } from "@/components/CobrancaAssistida";
+import { NfsePreparation } from "@/components/NfsePreparation";
 import { StatusBadge } from "@/components/StatusBadge";
 import {
   STATUSES,
@@ -263,6 +264,8 @@ function Detalhe() {
             </div>
           </div>
         </section>
+
+        <NfsePreparation ordem={ordem} />
 
         <CobrancaAssistida ordem={ordem} />
 

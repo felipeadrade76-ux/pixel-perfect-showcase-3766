@@ -78,6 +78,39 @@ export function AppShell({
     };
   }, [tentativa]);
 
+  useEffect(() => {
+    if (!pronto) return;
+
+    let ultimaAtualizacao = 0;
+    let cancelado = false;
+
+    const atualizarAoRetomar = () => {
+      if (document.visibilityState !== "visible") return;
+      const agora = Date.now();
+      if (agora - ultimaAtualizacao < 5_000) return;
+      ultimaAtualizacao = agora;
+
+      void Promise.all([loadOrdens(), loadClientes()]).catch((error: unknown) => {
+        if (!cancelado) {
+          setErroCarga(
+            error instanceof Error
+              ? error.message
+              : "Falha ao atualizar os dados após retomar o aplicativo.",
+          );
+        }
+      });
+    };
+
+    window.addEventListener("focus", atualizarAoRetomar);
+    document.addEventListener("visibilitychange", atualizarAoRetomar);
+
+    return () => {
+      cancelado = true;
+      window.removeEventListener("focus", atualizarAoRetomar);
+      document.removeEventListener("visibilitychange", atualizarAoRetomar);
+    };
+  }, [pronto]);
+
   const sair = () => supabase.auth.signOut();
 
   return (

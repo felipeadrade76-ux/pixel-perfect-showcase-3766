@@ -1,0 +1,19 @@
+{
+  "name": "Ritmeia",
+  "short_name": "Ritmeia",
+  "description": "Gestão de clientes, máquinas, ordens de serviço e financeiro operacional.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FCFAF7",
+  "theme_color": "#1F2328",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "/ritmeia-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

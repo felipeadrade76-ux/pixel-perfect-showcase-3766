@@ -38,7 +38,9 @@ test("an authenticated user can create an OS and reopen it in a mobile viewport"
   let saved: Record<string, unknown> | null = null;
   let savedClient: Record<string, unknown> | null = null;
   let savedEquipment: Record<string, unknown> | null = null;
+  let fiscalDraft: Record<string, unknown> | null = null;
   let charge: Record<string, unknown> | null = null;
+  let dataReads = 0;
   await page.route("https://example.supabase.co/**", async (route) => {
     const url = new URL(route.request().url());
     if (url.pathname === "/rest/v1/clientes") {
@@ -67,6 +69,7 @@ test("an authenticated user can create an OS and reopen it in a mobile viewport"
           body: JSON.stringify(savedClient),
         });
       } else {
+        dataReads += 1;
         const single = (route.request().headers()["accept"] ?? "").includes("vnd.pgrst.object");
         await route.fulfill({
           status: 200,
@@ -142,6 +145,44 @@ test("an authenticated user can create an OS and reopen it in a mobile viewport"
           body: JSON.stringify(single ? saved : saved ? [saved] : []),
         });
       }
+    } else if (url.pathname === "/rest/v1/documentos_fiscais") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(fiscalDraft ? [fiscalDraft] : []),
+      });
+    } else if (url.pathname === "/rest/v1/rpc/ritmeia_preparar_nfse") {
+      const input = JSON.parse(route.request().postData() ?? "{}");
+      fiscalDraft = {
+        id: input.p_documento_id,
+        user_id: userId,
+        ordem_id: input.p_ordem,
+        cliente_id: savedClient?.id,
+        status: "rascunho",
+        ambiente: "homologacao",
+        provedor: "nao_configurado",
+        valor_servicos: 100,
+        valor_pecas: 0,
+        valor_total_ordem: 100,
+        ordem_revisao: Number(saved?.revisao ?? 0),
+        tomador: { nome: "Cliente de teste" },
+        servico: { numero_os: "OS-0001" },
+        numero_nfse: null,
+        codigo_verificacao: null,
+        protocolo: null,
+        xml_url: null,
+        pdf_url: null,
+        erro_codigo: null,
+        erro_mensagem: null,
+        criado_em: "2026-09-29T01:00:00.000Z",
+        atualizado_em: "2026-09-29T01:00:00.000Z",
+        emitido_em: null,
+      };
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(fiscalDraft),
+      });
     } else if (url.pathname === "/rest/v1/cobrancas") {
       await route.fulfill({
         status: 200,
@@ -224,9 +265,28 @@ test("an authenticated user can create an OS and reopen it in a mobile viewport"
     .locator("section")
     .filter({ has: page.getByRole("heading", { name: "Peças e mão de obra" }) });
   await itens.locator('input[placeholder="Descrição"]').fill("Reparo");
+  await itens.locator("select").selectOption("Mão de obra");
   await itens.locator('input[placeholder="Valor R$"]').fill("100");
   await itens.getByRole("button", { name: "Adicionar item" }).click();
   await expect(itens).toContainText("R$ 100,00");
+
+  const fiscal = page
+    .locator("section")
+    .filter({ has: page.getByRole("heading", { name: "NFS-e" }) });
+  await fiscal.getByRole("button", { name: "Preparar NFS-e" }).click();
+  await expect(fiscal).toContainText("Rascunho fiscal preparado");
+  await expect(fiscal).toContainText("Serviços: R$ 100,00");
+  await expect(fiscal).toContainText("Peças separadas: R$ 0,00");
+  await expect(fiscal).toContainText("Homologação");
+  await expect(fiscal.getByRole("button", { name: /Emitir NFS-e/ })).toBeDisabled();
+
+  await itens.locator('input[placeholder="Descrição"]').fill("Ajuste de cadastro fiscal");
+  await itens.locator("select").selectOption("Mão de obra");
+  await itens.locator('input[placeholder="Valor R$"]').fill("0");
+  await itens.getByRole("button", { name: "Adicionar item" }).click();
+  await expect(fiscal).toContainText("A OS mudou depois que este rascunho foi preparado.");
+  await fiscal.getByRole("button", { name: "Atualizar rascunho fiscal" }).click();
+  await expect(fiscal).not.toContainText("A OS mudou depois que este rascunho foi preparado.");
 
   const cobrancas = page
     .locator("section")
@@ -281,4 +341,8 @@ test("an authenticated user can create an OS and reopen it in a mobile viewport"
   await expect(page.getByLabel("Menu principal")).toBeVisible();
   await expect(page.getByLabel("Ritmeia — ir para o início")).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+
+  const readsBeforeResume = dataReads;
+  await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await expect.poll(() => dataReads).toBeGreaterThan(readsBeforeResume);
 });

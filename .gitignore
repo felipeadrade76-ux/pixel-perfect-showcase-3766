@@ -40,3 +40,11 @@ dist-ssr
 # Supabase CLI local state (never link this repo to a production database in CI)
 supabase/.temp/
 .supabase/
+
+# Fiscal certificates and backups
+*.pfx
+*.p12
+*.pem
+*.key
+backups/
+*.dump

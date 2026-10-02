@@ -66,6 +66,8 @@ type EquipamentoRow = {
 
 const optional = (value: string | null | undefined) => value ?? undefined;
 const somenteDigitos = (value?: string) => value?.replace(/\D/g, "") || undefined;
+const documentoNormalizado = (value?: string) =>
+  value?.toUpperCase().replace(/[^A-Z0-9]/g, "") || undefined;
 
 function clienteFromRow(row: ClienteRow): Cliente {
   return {
@@ -191,11 +193,11 @@ export async function loadClientes(): Promise<void> {
 export type ClienteInput = Omit<Cliente, "id" | "criadoEm" | "atualizadoEm">;
 
 function validarDadosFiscais(input: Partial<ClienteInput>) {
-  const documento = somenteDigitos(input.documento);
+  const documento = documentoNormalizado(input.documento);
   const cep = somenteDigitos(input.cep);
   const uf = input.uf?.trim();
-  if (documento && documento.length !== 11 && documento.length !== 14) {
-    throw new Error("CPF/CNPJ deve ter 11 ou 14 números.");
+  if (documento && !/^[0-9]{11}$/.test(documento) && !/^[A-Z0-9]{14}$/.test(documento)) {
+    throw new Error("CPF deve ter 11 números; CNPJ deve ter 14 caracteres.");
   }
   if (cep && cep.length !== 8) {
     throw new Error("CEP deve ter 8 números.");
@@ -210,7 +212,7 @@ function clientePayload(
 ): Database["public"]["Tables"]["clientes"]["Update"] {
   const payload: Database["public"]["Tables"]["clientes"]["Update"] = {
     telefone: input.telefone?.trim() || null,
-    documento: somenteDigitos(input.documento) ?? null,
+    documento: documentoNormalizado(input.documento) ?? null,
     email: input.email?.trim().toLowerCase() || null,
     cep: somenteDigitos(input.cep) ?? null,
     logradouro: input.logradouro?.trim() || null,

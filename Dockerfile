@@ -13,6 +13,7 @@ RUN test -n "$VITE_SUPABASE_URL" && test -n "$VITE_SUPABASE_PUBLISHABLE_KEY"
 RUN bun run build
 
 FROM node:22-alpine AS runtime
+RUN apk add --no-cache openssl
 WORKDIR /app
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
